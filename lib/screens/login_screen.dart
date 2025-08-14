@@ -145,23 +145,23 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: [
                     // Logo/Title
                     const Icon(
-                      Icons.fitness_center,
+                      Icons.dashboard,
                       size: 80,
-                      color: Colors.blue,
+                      color: Color(0xFF1565C0),
                     ),
                     const SizedBox(height: 16),
                     const Text(
-                      'Fitness Tracker',
+                      'Welcome to Samaan AI',
                       style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
-                        color: Colors.blue,
+                        color: Color(0xFF1565C0),
                       ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      'Track your calories and reach your goals',
+                      'Your All-in-One Productivity & Health Platform',
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.grey,

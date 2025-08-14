@@ -4,7 +4,7 @@ import '../services/auth_service.dart';
 import '../services/firebase_service.dart';
 import 'login_screen.dart';
 import 'profile_setup_screen.dart';
-import 'dashboard_screen.dart';
+import 'main_dashboard_screen.dart';
 
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
@@ -76,8 +76,8 @@ class AuthGate extends StatelessWidget {
                   return const ProfileSetupScreen();
                 }
 
-                // Profile exists, go to dashboard
-                return const DashboardScreen();
+                // Profile exists, go to main dashboard
+                return const MainDashboardScreen();
               },
             );
           },
