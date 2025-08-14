@@ -1,0 +1,173 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Users collection - users can only read/write their own profile
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      // Validate user profile data structure
+      allow create: if request.auth != null 
+        && request.auth.uid == userId
+        && validateUserProfile(request.resource.data);
+      
+      allow update: if request.auth != null 
+        && request.auth.uid == userId
+        && validateUserProfile(request.resource.data)
+        && resource.data.uid == request.auth.uid; // Ensure uid doesn't change
+    }
+    
+    // Daily entries collection - users can only access their own entries
+    match /dailyEntries/{entryId} {
+      // Allow reading any document that follows the user ID pattern
+      allow read: if request.auth != null 
+        && entryId.matches('^' + request.auth.uid + '_.*');
+      
+      // Allow writing if user owns the document (whether it exists or not)
+      allow write: if request.auth != null 
+        && entryId.matches('^' + request.auth.uid + '_.*')
+        && request.resource.data.uid == request.auth.uid;
+      
+      // Allow creating new documents
+      allow create: if request.auth != null 
+        && request.auth.uid == request.resource.data.uid
+        && entryId.matches('^' + request.auth.uid + '_.*')
+        && validateDailyEntry(request.resource.data);
+      
+      // Allow updating existing documents
+      allow update: if request.auth != null 
+        && request.auth.uid == resource.data.uid
+        && request.auth.uid == request.resource.data.uid
+        && validateDailyEntry(request.resource.data);
+      
+      // Allow deleting user's own documents
+      allow delete: if request.auth != null 
+        && request.auth.uid == resource.data.uid;
+    }
+    
+    // Weight loss goals collection - users can only access their own goals
+    match /weightLossGoals/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      // Validate weight loss goal data structure
+      allow create: if request.auth != null 
+        && request.auth.uid == userId
+        && validateWeightLossGoal(request.resource.data);
+      
+      allow update: if request.auth != null 
+        && request.auth.uid == userId
+        && validateWeightLossGoal(request.resource.data)
+        && resource.data.uid == request.auth.uid; // Ensure uid doesn't change
+    }
+    
+    // Helper functions for data validation
+    function validateUserProfile(data) {
+      return data.keys().hasAll(['uid', 'email', 'dateOfBirth', 'height', 'weight', 'gender', 'createdAt', 'updatedAt'])
+        && data.uid is string
+        && data.email is string
+        && data.dateOfBirth is timestamp
+        && data.height is number
+        && data.height > 0
+        && data.height <= 300
+        && data.weight is number
+        && data.weight > 0
+        && data.weight <= 1100
+        && data.gender in ['male', 'female']
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+    
+    function validateDailyEntry(data) {
+      return data.keys().hasAll(['uid', 'date', 'createdAt', 'updatedAt'])
+        && data.uid is string
+        && data.date is timestamp
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp
+        && (
+          // Weight validation (optional)
+          !data.keys().hasAny(['weight']) ||
+          (data.weight is number && data.weight > 0 && data.weight <= 1100)
+        )
+        && (
+          // Food entries validation (optional)
+          !data.keys().hasAny(['foodEntries']) ||
+          (data.foodEntries is list && validateFoodEntries(data.foodEntries))
+        )
+        && (
+          // Exercise entries validation (optional)
+          !data.keys().hasAny(['exerciseEntries']) ||
+          (data.exerciseEntries is list && validateExerciseEntries(data.exerciseEntries))
+        );
+    }
+    
+    function validateFoodEntries(entries) {
+      return entries.size() <= 50 // Limit number of entries per day
+        && entries.all(entry, validateFoodEntry(entry));
+    }
+    
+    function validateFoodEntry(entry) {
+      return entry.keys().hasAll(['name', 'calories'])
+        && entry.name is string
+        && entry.name.size() > 0
+        && entry.name.size() <= 100
+        && entry.calories is number
+        && entry.calories >= 0
+        && entry.calories <= 5000 // Reasonable upper limit
+        && (
+          !entry.keys().hasAny(['description']) ||
+          (entry.description is string && entry.description.size() <= 500)
+        );
+    }
+    
+    function validateExerciseEntries(entries) {
+      return entries.size() <= 20 // Limit number of entries per day
+        && entries.all(entry, validateExerciseEntry(entry));
+    }
+    
+    function validateExerciseEntry(entry) {
+      return entry.keys().hasAll(['name', 'caloriesBurned', 'durationMinutes'])
+        && entry.name is string
+        && entry.name.size() > 0
+        && entry.name.size() <= 100
+        && entry.caloriesBurned is number
+        && entry.caloriesBurned >= 0
+        && entry.caloriesBurned <= 2000 // Reasonable upper limit
+        && entry.durationMinutes is int
+        && entry.durationMinutes > 0
+        && entry.durationMinutes <= 1440 // Max 24 hours
+        && (
+          !entry.keys().hasAny(['description']) ||
+          (entry.description is string && entry.description.size() <= 500)
+        );
+    }
+    
+    function validateWeightLossGoal(data) {
+      return data.keys().hasAll(['uid', 'weightLossPerWeek', 'targetWeight', 'currentWeight', 'startDate', 'isActive', 'createdAt', 'updatedAt'])
+        && data.uid is string
+        && data.weightLossPerWeek is number
+        && data.weightLossPerWeek > 0
+        && data.weightLossPerWeek <= 5 // Max 5 lbs per week for safety
+        && data.targetWeight is number
+        && data.targetWeight > 0
+        && data.targetWeight <= 1100 // Max weight in lbs
+        && data.currentWeight is number
+        && data.currentWeight > 0
+        && data.currentWeight <= 1100 // Max weight in lbs
+        && data.targetWeight < data.currentWeight // Target must be less than current for weight loss
+        && data.startDate is timestamp
+        && data.isActive is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp
+        && (
+          // Target date is optional
+          !data.keys().hasAny(['targetDate']) ||
+          data.targetDate is timestamp
+        );
+    }
+    
+    // Deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+} 

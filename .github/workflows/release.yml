@@ -1,0 +1,120 @@
+name: Production Release
+
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger on version tags like v1.0.0
+  workflow_dispatch:  # Allow manual trigger
+
+permissions:
+  contents: write  # Required for creating releases
+  actions: read
+  checks: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+        
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.32.6'
+        channel: 'stable'
+        
+    - name: Setup Node.js for Firebase
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Install Firebase CLI
+      run: npm install -g firebase-tools
+        
+    - name: Install dependencies
+      run: flutter pub get
+      
+    - name: Decode production google-services.json
+      run: |
+        echo "${{ secrets.GOOGLE_SERVICES_PROD }}" | base64 -d > android/app/google-services.json
+        # Validate the decoded JSON
+        python3 -m json.tool android/app/google-services.json > /dev/null
+        echo "✅ Production google-services.json is valid"
+        
+    - name: Decode Android release keystore
+      run: |
+        echo "${{ secrets.ANDROID_RELEASE_KEYSTORE }}" | base64 -d > android/app/production-keystore.jks
+        echo "✅ Production keystore decoded"
+        
+    - name: Create production key.properties
+      run: |
+        echo "storePassword=${{ secrets.ANDROID_RELEASE_KEYSTORE_PASSWORD }}" > android/key.properties
+        echo "keyPassword=${{ secrets.ANDROID_RELEASE_KEY_PASSWORD }}" >> android/key.properties
+        echo "keyAlias=${{ secrets.ANDROID_RELEASE_KEY_ALIAS }}" >> android/key.properties
+        echo "storeFile=production-keystore.jks" >> android/key.properties
+        echo "✅ Production signing configuration created"
+        
+    - name: Run tests
+      run: flutter test
+        
+    - name: Build Flutter Web (Production)
+      run: |
+        flutter build web --release \
+          --dart-define=ENVIRONMENT=production \
+          --dart-define=GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID_PRODUCTION }}
+      
+    - name: Deploy to Firebase (Production)
+      run: |
+        firebase use fitness-tracker-p2025 --token "${{ secrets.FIREBASE_TOKEN }}"
+        firebase deploy --only hosting,functions --token "${{ secrets.FIREBASE_TOKEN }}"
+        echo "✅ Production web and functions deployed"
+        
+    - name: Build Production APK
+      run: flutter build apk --release --dart-define=ENVIRONMENT=production
+      
+    - name: Build Production App Bundle (for Play Store)
+      run: flutter build appbundle --release --dart-define=ENVIRONMENT=production
+      
+    - name: Upload Production Web artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: production-web-build
+        path: build/web/
+        
+    - name: Upload Production APK artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: production-release-apk
+        path: build/app/outputs/flutter-apk/app-release.apk
+        
+    - name: Upload Production AAB artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: production-release-aab
+        path: build/app/outputs/bundle/release/app-release.aab
+        
+    - name: Create GitHub Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          build/app/outputs/flutter-apk/app-release.apk
+          build/app/outputs/bundle/release/app-release.aab
+        body: |
+          🚀 **Production Release ${{ github.ref_name }}**
+          
+          📱 **Android APK**: Download from assets below
+          📦 **Android AAB**: For Play Store deployment
+          🌐 **Web**: Deployed to https://fitness-tracker-p2025.web.app
+          
+          This release includes both web and Android builds.
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

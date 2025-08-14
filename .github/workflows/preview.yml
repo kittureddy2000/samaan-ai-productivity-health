@@ -1,0 +1,107 @@
+name: Preview Deploy (Feature Branches)
+
+on:
+  push:
+    branches:
+      - 'feature/**'
+      - 'bugfix/**'
+      - 'hotfix/**'
+  pull_request:
+    branches:
+      - develop
+      - main
+
+permissions:
+  contents: read
+  pull-requests: write  # Required for commenting on PRs
+  actions: read
+  checks: read
+
+jobs:
+  preview-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.32.6'
+        channel: 'stable'
+        
+    - name: Setup Node.js for Firebase
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Install Firebase CLI
+      run: npm install -g firebase-tools
+        
+    - name: Install dependencies
+      run: flutter pub get
+      
+    - name: Decode staging google-services.json for Android
+      run: |
+        echo "${{ secrets.GOOGLE_SERVICES_STAGING }}" | base64 -d > android/app/google-services.json
+        
+    - name: Configure Google Client ID for web
+      run: |
+        sed -i 's/{{GOOGLE_CLIENT_ID}}/${{ secrets.GOOGLE_CLIENT_ID_STAGING }}/g' web/index.html
+        
+    - name: Run tests
+      run: flutter test
+      
+    - name: Build Flutter Web (Preview)
+      run: flutter build web --release --dart-define=ENVIRONMENT=development
+      
+    - name: Deploy to Firebase Hosting (Preview Channel)
+      run: |
+        firebase use fitness-tracker-8d0ae --token "${{ secrets.FIREBASE_TOKEN }}"
+        firebase hosting:channel:deploy preview-${{ github.ref_name }} --token "${{ secrets.FIREBASE_TOKEN }}"
+        
+    - name: Setup Java for Android
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+        
+    - name: Setup consistent debug keystore for preview
+      run: |
+        echo "🔧 Setting up consistent debug keystore for preview"
+        rm -f android/key.properties
+        rm -f android/app/*.jks
+        
+        # Create .android directory and decode our consistent debug keystore
+        mkdir -p ~/.android
+        echo "${{ secrets.DEBUG_KEYSTORE }}" | base64 -d > ~/.android/debug.keystore
+        
+        echo "✅ Using consistent debug keystore (SHA-1 matches Firebase)"
+        
+    - name: Build Debug APK (Preview)
+      run: flutter build apk --debug --dart-define=ENVIRONMENT=development
+      
+    - name: Upload Web Preview artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: preview-web-${{ github.ref_name }}
+        path: build/web/
+        
+    - name: Upload Debug APK artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: preview-apk-${{ github.ref_name }}
+        path: build/app/outputs/flutter-apk/app-debug.apk
+        
+    - name: Comment Preview URL on PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: '🚀 **Preview deployed!**\n\n📱 **Web Preview**: https://fitness-tracker-8d0ae--preview-${{ github.ref_name }}.web.app\n📱 **Android APK**: Available in workflow artifacts\n\n*Preview will be available for 7 days.*'
+          })

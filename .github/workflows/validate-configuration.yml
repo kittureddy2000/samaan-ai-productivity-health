@@ -1,0 +1,136 @@
+name: Validate Configuration
+
+on:
+  workflow_dispatch:  # Manual trigger for validation
+  pull_request:      # Run on PRs to catch issues early
+  push:              # Also run on push to main
+
+jobs:
+  validate-secrets:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+        
+    - name: Setup Java for keystore operations
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+        
+    - name: Validate Staging Configuration
+      run: |
+        echo "=== VALIDATING STAGING CONFIGURATION ==="
+        
+        # Decode staging google-services.json
+        if [ -z "${{ secrets.GOOGLE_SERVICES_STAGING }}" ]; then
+          echo "❌ GOOGLE_SERVICES_STAGING secret is missing"
+          exit 1
+        fi
+        
+        echo "${{ secrets.GOOGLE_SERVICES_STAGING }}" | base64 -d > staging-google-services.json
+        
+        # Validate JSON structure
+        if ! python3 -m json.tool staging-google-services.json > /dev/null 2>&1; then
+          echo "❌ Staging google-services.json is invalid JSON"
+          exit 1
+        fi
+        
+        # Run Python validation script
+        python3 .github/scripts/validate_staging.py
+        
+    - name: Validate Production Configuration
+      run: |
+        echo "=== VALIDATING PRODUCTION CONFIGURATION ==="
+        
+        # Check if production secrets exist
+        if [ -z "${{ secrets.GOOGLE_SERVICES_PROD }}" ]; then
+          echo "❌ GOOGLE_SERVICES_PROD secret is missing"
+          exit 1
+        fi
+        
+        if [ -z "${{ secrets.ANDROID_RELEASE_KEYSTORE }}" ]; then
+          echo "❌ ANDROID_RELEASE_KEYSTORE secret is missing"
+          exit 1
+        fi
+        
+        # Decode production google-services.json
+        echo "${{ secrets.GOOGLE_SERVICES_PROD }}" | base64 -d > prod-google-services.json
+        
+        # Validate JSON structure
+        if ! python3 -m json.tool prod-google-services.json > /dev/null 2>&1; then
+          echo "❌ Production google-services.json is invalid JSON"
+          exit 1
+        fi
+        
+        # Run Python validation script
+        python3 .github/scripts/validate_production.py
+        
+    - name: Validate Web Client IDs
+      run: |
+        echo "=== VALIDATING WEB CLIENT IDS ==="
+        
+        if [ -z "${{ secrets.GOOGLE_CLIENT_ID_STAGING }}" ]; then
+          echo "❌ GOOGLE_CLIENT_ID_STAGING secret is missing"
+          exit 1
+        fi
+        
+        if [ -z "${{ secrets.GOOGLE_CLIENT_ID_PRODUCTION }}" ]; then
+          echo "❌ GOOGLE_CLIENT_ID_PRODUCTION secret is missing"  
+          exit 1
+        fi
+        
+        echo "✅ GOOGLE_CLIENT_ID_STAGING: ${{ secrets.GOOGLE_CLIENT_ID_STAGING }}"
+        echo "✅ GOOGLE_CLIENT_ID_PRODUCTION: ${{ secrets.GOOGLE_CLIENT_ID_PRODUCTION }}"
+        
+        # Validate format (should end with .apps.googleusercontent.com)
+        if [[ "${{ secrets.GOOGLE_CLIENT_ID_STAGING }}" != *".apps.googleusercontent.com" ]]; then
+          echo "❌ GOOGLE_CLIENT_ID_STAGING doesn't appear to be a valid OAuth client ID"
+          exit 1
+        fi
+        
+        if [[ "${{ secrets.GOOGLE_CLIENT_ID_PRODUCTION }}" != *".apps.googleusercontent.com" ]]; then
+          echo "❌ GOOGLE_CLIENT_ID_PRODUCTION doesn't appear to be a valid OAuth client ID"
+          exit 1
+        fi
+        
+        echo "✅ Web client IDs are valid!"
+        
+    - name: Validate Debug Keystore
+      run: |
+        echo "=== VALIDATING DEBUG KEYSTORE ==="
+        
+        if [ -z "${{ secrets.DEBUG_KEYSTORE }}" ]; then
+          echo "❌ DEBUG_KEYSTORE secret is missing"
+          exit 1
+        fi
+        
+        # Decode and test the debug keystore
+        echo "${{ secrets.DEBUG_KEYSTORE }}" | base64 -d > /tmp/debug.keystore
+        
+        # Verify we can list the keystore
+        if keytool -list -keystore /tmp/debug.keystore -alias androiddebugkey -storepass android -keypass android > /dev/null 2>&1; then
+          echo "✅ DEBUG_KEYSTORE is valid"
+        else
+          echo "❌ DEBUG_KEYSTORE is invalid or corrupted"
+          exit 1
+        fi
+        
+        # Clean up
+        rm -f /tmp/debug.keystore
+        
+    - name: Summary
+      run: |
+        echo "=== CONFIGURATION VALIDATION COMPLETE ==="
+        echo "✅ All secrets are properly configured"
+        echo "✅ JSON structures are valid"
+        echo "✅ Project IDs match expected environments"
+        echo "✅ Package names are correct"
+        echo "✅ Web client IDs are valid"
+        echo "✅ Debug keystore is valid and consistent"
