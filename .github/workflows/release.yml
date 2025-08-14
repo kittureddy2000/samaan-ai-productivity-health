@@ -65,6 +65,11 @@ jobs:
     - name: Run tests
       run: flutter test
         
+    - name: Replace Google Client ID in web template
+      run: |
+        sed -i 's/{{GOOGLE_CLIENT_ID}}/${{ secrets.GOOGLE_CLIENT_ID_PRODUCTION }}/g' web/index.html
+        echo "✅ Replaced GOOGLE_CLIENT_ID in web/index.html"
+        
     - name: Build Flutter Web (Production)
       run: |
         flutter build web --release \
@@ -74,8 +79,8 @@ jobs:
     - name: Deploy to Firebase (Production)
       run: |
         firebase use samaan-ai-production-2025 --token "${{ secrets.FIREBASE_TOKEN }}"
-        firebase deploy --only hosting,functions --token "${{ secrets.FIREBASE_TOKEN }}"
-        echo "✅ Production web and functions deployed"
+        firebase deploy --only hosting --token "${{ secrets.FIREBASE_TOKEN }}"
+        echo "✅ Production web deployed"
         
     - name: Build Production APK
       run: flutter build apk --release --dart-define=ENVIRONMENT=production
