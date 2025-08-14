@@ -1,7 +1,8 @@
 {
   "projects": {
-    "staging": "fitness-tracker-8d0ae",
-    "production": "fitness-tracker-p2025"
+    "default": "samaan-ai-staging-2025",
+    "staging": "samaan-ai-staging-2025",
+    "production": "samaan-ai-production-2025"
   },
   "targets": {},
   "etags": {}
