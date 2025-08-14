@@ -73,7 +73,7 @@ jobs:
       
     - name: Deploy to Firebase (Production)
       run: |
-        firebase use fitness-tracker-p2025 --token "${{ secrets.FIREBASE_TOKEN }}"
+        firebase use samaan-ai-production-2025 --token "${{ secrets.FIREBASE_TOKEN }}"
         firebase deploy --only hosting,functions --token "${{ secrets.FIREBASE_TOKEN }}"
         echo "✅ Production web and functions deployed"
         
@@ -113,7 +113,7 @@ jobs:
           
           📱 **Android APK**: Download from assets below
           📦 **Android AAB**: For Play Store deployment
-          🌐 **Web**: Deployed to https://fitness-tracker-p2025.web.app
+          🌐 **Web**: Deployed to https://samaan-ai-production-2025.web.app
           
           This release includes both web and Android builds.
       env:

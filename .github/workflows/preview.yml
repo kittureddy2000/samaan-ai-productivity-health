@@ -58,7 +58,7 @@ jobs:
       
     - name: Deploy to Firebase Hosting (Preview Channel)
       run: |
-        firebase use fitness-tracker-8d0ae --token "${{ secrets.FIREBASE_TOKEN }}"
+        firebase use samaan-ai-staging-2025 --token "${{ secrets.FIREBASE_TOKEN }}"
         firebase hosting:channel:deploy preview-${{ github.ref_name }} --token "${{ secrets.FIREBASE_TOKEN }}"
         
     - name: Setup Java for Android
@@ -103,5 +103,5 @@ jobs:
             issue_number: context.issue.number,
             owner: context.repo.owner,
             repo: context.repo.repo,
-            body: '🚀 **Preview deployed!**\n\n📱 **Web Preview**: https://fitness-tracker-8d0ae--preview-${{ github.ref_name }}.web.app\n📱 **Android APK**: Available in workflow artifacts\n\n*Preview will be available for 7 days.*'
+            body: '🚀 **Preview deployed!**\n\n📱 **Web Preview**: https://samaan-ai-staging-2025--preview-${{ github.ref_name }}.web.app\n📱 **Android APK**: Available in workflow artifacts\n\n*Preview will be available for 7 days.*'
           })

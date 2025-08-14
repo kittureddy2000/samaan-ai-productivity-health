@@ -49,7 +49,7 @@ jobs:
       
     - name: Deploy to Firebase (Staging)
       run: |
-        firebase use fitness-tracker-8d0ae --token "${{ secrets.FIREBASE_TOKEN }}"
+        firebase use samaan-ai-staging-2025 --token "${{ secrets.FIREBASE_TOKEN }}"
         firebase deploy --only hosting,functions --token "${{ secrets.FIREBASE_TOKEN }}"
         
     - name: Setup Java for Android

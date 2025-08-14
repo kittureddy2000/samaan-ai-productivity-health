@@ -7,8 +7,8 @@ with open('staging-google-services.json', 'r') as f:
 project_id = data['project_info']['project_id']
 print(f'✅ Staging Project ID: {project_id}')
 
-if project_id != 'fitness-tracker-8d0ae':
-    print(f'❌ Expected staging project: fitness-tracker-8d0ae, got: {project_id}')
+if project_id != 'samaan-ai-staging-2025':
+    print(f'❌ Expected staging project: samaan-ai-staging-2025, got: {project_id}')
     sys.exit(1)
 
 # Check Android client
@@ -26,7 +26,7 @@ cert_hash = android_client['android_info']['certificate_hash']
 print(f'✅ Package Name: {package_name}')
 print(f'✅ Certificate Hash: {cert_hash}')
 
-if package_name != 'com.fitnesstracker.fitness_tracker':
+if package_name != 'com.samaanai.productivityhealth':
     print(f'❌ Unexpected package name: {package_name}')
     sys.exit(1)
 
