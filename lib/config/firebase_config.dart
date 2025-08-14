@@ -18,45 +18,45 @@ class FirebaseConfig {
   
   // Staging Firebase configuration (Mobile)
   static const FirebaseOptions _stagingConfig = FirebaseOptions(
-    apiKey: "AIzaSyAhBC9FUOX02Kj3HBIAmwFOmi9cNFqRR5A",
-    authDomain: "fitness-tracker-8d0ae.firebaseapp.com",
-    projectId: "fitness-tracker-8d0ae",
-    storageBucket: "fitness-tracker-8d0ae.firebasestorage.app",
-    messagingSenderId: "763348902456",
-    appId: "1:763348902456:android:536b977f3ec075131ebccd",
-    measurementId: "G-Q8J9DC0FNY",
+    apiKey: "AIzaSyDngmDDrO8GnMK898Ecy-eRiIFQc_YSs_I",
+    authDomain: "samaan-ai-staging-2025.firebaseapp.com",
+    projectId: "samaan-ai-staging-2025",
+    storageBucket: "samaan-ai-staging-2025.firebasestorage.app",
+    messagingSenderId: "362525403590",
+    appId: "1:362525403590:android:3c8a94a5ceee9942e36ac7",
+    measurementId: "G-MEASUREMENT_ID", // Update this with your actual measurement ID
   );
   
   // Staging Firebase configuration (Web)
   static const FirebaseOptions _stagingWebConfig = FirebaseOptions(
-    apiKey: "AIzaSyAhBC9FUOX02Kj3HBIAmwFOmi9cNFqRR5A",
-    authDomain: "fitness-tracker-8d0ae.firebaseapp.com",
-    projectId: "fitness-tracker-8d0ae",
-    storageBucket: "fitness-tracker-8d0ae.firebasestorage.app",
-    messagingSenderId: "763348902456",
-    appId: "1:763348902456:web:b5b5bb8a0c5c8a8b1ebccd",
-    measurementId: "G-Q8J9DC0FNY",
+    apiKey: "AIzaSyDngmDDrO8GnMK898Ecy-eRiIFQc_YSs_I",
+    authDomain: "samaan-ai-staging-2025.firebaseapp.com",
+    projectId: "samaan-ai-staging-2025",
+    storageBucket: "samaan-ai-staging-2025.firebasestorage.app",
+    messagingSenderId: "362525403590",
+    appId: "1:362525403590:web:3110155a85fba0a0e36ac7",
+    measurementId: "G-MEASUREMENT_ID", // Update this with your actual measurement ID
   );
   
   // Production Firebase configuration (Mobile)
   static const FirebaseOptions _productionConfig = FirebaseOptions(
-    apiKey: "AIzaSyAhKu4npHEKmTM5FZTy-jNdcY0kH3W2z6s",
-    authDomain: "fitness-tracker-p2025.firebaseapp.com",
-    projectId: "fitness-tracker-p2025",
-    storageBucket: "fitness-tracker-p2025.firebasestorage.app",
-    messagingSenderId: "934862983900",
-    appId: "1:934862983900:android:9eb21955cbc6a477c1da19",
+    apiKey: "AIzaSyCYPDJDhMuH1wEDCGJ8sjAERA445w5BFRg",
+    authDomain: "samaan-ai-production-2025.firebaseapp.com",
+    projectId: "samaan-ai-production-2025",
+    storageBucket: "samaan-ai-production-2025.firebasestorage.app",
+    messagingSenderId: "995832123315",
+    appId: "1:995832123315:android:726dd726de26fb1ce585c6",
     measurementId: "G-MEASUREMENT_ID", // Update this with your actual measurement ID
   );
   
   // Production Firebase configuration (Web)
   static const FirebaseOptions _productionWebConfig = FirebaseOptions(
-    apiKey: "AIzaSyAhKu4npHEKmTM5FZTy-jNdcY0kH3W2z6s",
-    authDomain: "fitness-tracker-p2025.firebaseapp.com",
-    projectId: "fitness-tracker-p2025",
-    storageBucket: "fitness-tracker-p2025.firebasestorage.app",
-    messagingSenderId: "934862983900",
-    appId: "1:934862983900:web:c1b5bb8a0c5c8a8bc1da19",
+    apiKey: "AIzaSyC-W0WnHal4p69e0NLEMfbqX4wulxc527U",
+    authDomain: "samaan-ai-production-2025.firebaseapp.com",
+    projectId: "samaan-ai-production-2025",
+    storageBucket: "samaan-ai-production-2025.firebasestorage.app",
+    messagingSenderId: "995832123315",
+    appId: "1:995832123315:web:359017de78c35bd1e585c6",
     measurementId: "G-MEASUREMENT_ID", // Update this with your actual measurement ID
   );
   
