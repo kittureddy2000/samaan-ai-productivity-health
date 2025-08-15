@@ -52,18 +52,31 @@ jobs:
         echo "Package name should be: com.samaanai.productivityhealth.prod"
         grep -o '"package_name"[[:space:]]*:[[:space:]]*"[^"]*"' android/app/google-services.json
         
-    - name: Decode Android release keystore
+    - name: Setup production debug keystore (same as staging for OAuth compatibility)
       run: |
-        echo "${{ secrets.ANDROID_RELEASE_KEYSTORE }}" | base64 -d > android/app/production-keystore.jks
-        echo "✅ Production keystore decoded"
+        echo "🔧 Using same debug keystore as staging for OAuth compatibility"
         
-    - name: Create production key.properties
-      run: |
-        echo "storePassword=${{ secrets.ANDROID_RELEASE_KEYSTORE_PASSWORD }}" > android/key.properties
-        echo "keyPassword=${{ secrets.ANDROID_RELEASE_KEY_PASSWORD }}" >> android/key.properties
-        echo "keyAlias=${{ secrets.ANDROID_RELEASE_KEY_ALIAS }}" >> android/key.properties
-        echo "storeFile=production-keystore.jks" >> android/key.properties
-        echo "✅ Production signing configuration created"
+        # Create .android directory and decode the debug keystore (same as staging)
+        mkdir -p /home/runner/.config/.android/
+        echo "${{ secrets.DEBUG_KEYSTORE }}" | base64 -d > /home/runner/.config/.android/debug.keystore
+        
+        # Verify the keystore and get SHA-1
+        echo "🔍 Verifying debug keystore SHA-1..."
+        KEYSTORE_SHA1=$(keytool -list -v -keystore /home/runner/.config/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android | grep "SHA1:" | sed 's/.*SHA1: //' | tr -d ' ')
+        echo "🔑 Production keystore SHA-1: $KEYSTORE_SHA1"
+        
+        # Expected SHA-1 (should match OAuth client configuration)
+        EXPECTED_SHA1="53315440bd500648d1034bdf6fa462fce03775fa"
+        KEYSTORE_SHA1_CLEAN=$(echo "$KEYSTORE_SHA1" | tr -d ':' | tr '[:upper:]' '[:lower:]')
+        
+        if [ "$KEYSTORE_SHA1_CLEAN" = "$EXPECTED_SHA1" ]; then
+          echo "✅ SUCCESS: Production keystore SHA-1 matches OAuth client configuration!"
+        else
+          echo "❌ FATAL: SHA-1 mismatch!"
+          echo "   Expected: $EXPECTED_SHA1"  
+          echo "   Got:      $KEYSTORE_SHA1_CLEAN"
+          exit 1
+        fi
         
     - name: Run tests
       run: flutter test
@@ -99,11 +112,11 @@ jobs:
         firebase deploy --only hosting
         echo "✅ Production web deployed"
         
-    - name: Build Production APK
-      run: flutter build apk --release --flavor production --dart-define=ENVIRONMENT=production
+    - name: Build Production APK (debug mode for OAuth compatibility)
+      run: flutter build apk --debug --flavor production --dart-define=ENVIRONMENT=production
       
-    - name: Build Production App Bundle (for Play Store)
-      run: flutter build appbundle --release --flavor production --dart-define=ENVIRONMENT=production
+    - name: Build Production App Bundle (debug mode for OAuth compatibility)  
+      run: flutter build appbundle --debug --flavor production --dart-define=ENVIRONMENT=production
       
     - name: Upload Production Web artifact
       uses: actions/upload-artifact@v4
@@ -114,22 +127,22 @@ jobs:
     - name: Upload Production APK artifact
       uses: actions/upload-artifact@v4
       with:
-        name: production-release-apk
-        path: build/app/outputs/flutter-apk/app-production-release.apk
+        name: production-debug-apk
+        path: build/app/outputs/flutter-apk/app-production-debug.apk
         
     - name: Upload Production AAB artifact
       uses: actions/upload-artifact@v4
       with:
-        name: production-release-aab
-        path: build/app/outputs/bundle/productionRelease/app-production-release.aab
+        name: production-debug-aab
+        path: build/app/outputs/bundle/productionDebug/app-production-debug.aab
         
     - name: Create GitHub Release
       if: startsWith(github.ref, 'refs/tags/')
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          build/app/outputs/flutter-apk/app-production-release.apk
-          build/app/outputs/bundle/productionRelease/app-production-release.aab
+          build/app/outputs/flutter-apk/app-production-debug.apk
+          build/app/outputs/bundle/productionDebug/app-production-debug.aab
         body: |
           🚀 **Production Release ${{ github.ref_name }}**
           
