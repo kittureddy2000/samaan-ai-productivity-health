@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "995832123315",
+    "project_id": "samaan-ai-production-2025",
+    "storage_bucket": "samaan-ai-production-2025.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:995832123315:android:4063d9209eefa7b0e585c6",
+        "android_client_info": {
+          "package_name": "com.samaanai.productivityhealth.prod"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "995832123315-t8hsulg1bcfaa0n3m45blmv62guqdkg3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.samaanai.productivityhealth.prod",
+            "certificate_hash": "53315440bd500648d1034bdf6fa462fce03775fa"
+          }
+        },
+        {
+          "client_id": "995832123315-4litu5h9gd77uhttf7t7jud74srubut1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCYPDJDhMuH1wEDCGJ8sjAERA445w5BFRg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "995832123315-4litu5h9gd77uhttf7t7jud74srubut1.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "995832123315-durjomiu0d0kp086hnti7rb16hvmgeus.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.samaanai.productivityhealth.prod"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
