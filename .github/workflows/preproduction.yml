@@ -122,7 +122,7 @@ jobs:
         fi
         
     - name: Build Debug APK (Staging)
-      run: flutter build apk --debug --dart-define=ENVIRONMENT=staging
+      run: flutter build apk --debug --flavor staging --dart-define=ENVIRONMENT=staging
       
     - name: Verify Gradle signingReport (debug) matches expected SHA-1
       run: |
@@ -171,4 +171,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: staging-debug-apk
-        path: build/app/outputs/flutter-apk/app-debug.apk
+        path: build/app/outputs/flutter-apk/app-staging-debug.apk
