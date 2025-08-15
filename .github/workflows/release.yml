@@ -83,10 +83,17 @@ jobs:
           --dart-define=ENVIRONMENT=production \
           --dart-define=GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID_PRODUCTION }}
       
+    - name: Setup Firebase Service Account
+      run: |
+        echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}" | base64 -d > $HOME/gcloud-service-key.json
+        export GOOGLE_APPLICATION_CREDENTIALS=$HOME/gcloud-service-key.json
+        gcloud auth activate-service-account --key-file=$HOME/gcloud-service-key.json
+        echo "GOOGLE_APPLICATION_CREDENTIALS=$HOME/gcloud-service-key.json" >> $GITHUB_ENV
+        
     - name: Deploy to Firebase (Production)
       run: |
-        firebase use samaan-ai-production-2025 --token "${{ secrets.FIREBASE_TOKEN }}"
-        firebase deploy --only hosting --token "${{ secrets.FIREBASE_TOKEN }}"
+        firebase use samaan-ai-production-2025
+        firebase deploy --only hosting
         echo "✅ Production web deployed"
         
     - name: Build Production APK
