@@ -31,12 +31,14 @@ jobs:
     - name: Install dependencies
       run: flutter pub get
       
-    - name: Decode staging google-services.json
+    - name: Setup staging google-services.json
       run: |
         echo "${{ secrets.GOOGLE_SERVICES_STAGING }}" | base64 -d > android/app/google-services.json
         # Validate the decoded JSON
         python3 -m json.tool android/app/google-services.json > /dev/null
-        echo "✅ google-services.json is valid"
+        echo "✅ Staging google-services.json is valid"
+        echo "Package name should be: com.samaanai.productivityhealth"
+        grep -o '"package_name"[[:space:]]*:[[:space:]]*"[^"]*"' android/app/google-services.json
         
     - name: Run tests
       run: flutter test

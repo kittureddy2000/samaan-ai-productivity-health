@@ -42,12 +42,15 @@ jobs:
     - name: Install dependencies
       run: flutter pub get
       
-    - name: Decode production google-services.json
+    - name: Setup production google-services.json  
       run: |
-        echo "${{ secrets.GOOGLE_SERVICES_PROD }}" | base64 -d > android/app/google-services.json
-        # Validate the decoded JSON
+        # Copy the production google-services.json that has the correct package name
+        cp android/app/google-services-production.json android/app/google-services.json
+        # Validate the JSON
         python3 -m json.tool android/app/google-services.json > /dev/null
         echo "✅ Production google-services.json is valid"
+        echo "Package name should be: com.samaanai.productivityhealth.prod"
+        grep -o '"package_name"[[:space:]]*:[[:space:]]*"[^"]*"' android/app/google-services.json
         
     - name: Decode Android release keystore
       run: |

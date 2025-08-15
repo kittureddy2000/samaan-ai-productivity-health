@@ -55,10 +55,11 @@ android {
 
     defaultConfig {
         // Use different package names for staging vs production
-        applicationId project.hasProperty('dart-defines') && 
-                     project.property('dart-defines').contains('ENVIRONMENT=production') 
-                     ? "com.samaanai.productivityhealth.prod" 
-                     : "com.samaanai.productivityhealth"
+        // Check for ENVIRONMENT=production in dart defines
+        def dartDefines = project.hasProperty('dart-defines') ? project.property('dart-defines') : ''
+        def isProduction = dartDefines.contains('ENVIRONMENT=production')
+        
+        applicationId isProduction ? "com.samaanai.productivityhealth.prod" : "com.samaanai.productivityhealth"
         minSdkVersion 23
         targetSdkVersion 35
         versionCode flutterVersionCode.toInteger()
