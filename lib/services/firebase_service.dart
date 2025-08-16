@@ -241,8 +241,48 @@ class FirebaseService extends ChangeNotifier {
   }
 
   // Cloud Functions
+  // Debug function to check user profile completeness
+  Future<Map<String, dynamic>> debugUserProfile(String uid) async {
+    try {
+      final userDoc = await _firestore.collection('users').doc(uid).get();
+      
+      if (!userDoc.exists) {
+        return {'exists': false, 'error': 'User profile not found'};
+      }
+      
+      final userData = userDoc.data()!;
+      final result = {
+        'exists': true,
+        'data': userData,
+        'requiredFields': {
+          'height': userData['height'] != null,
+          'weight': userData['weight'] != null,
+          'gender': userData['gender'] != null,
+          'dateOfBirth': userData['dateOfBirth'] != null,
+        },
+        'fieldValues': {
+          'height': userData['height'],
+          'weight': userData['weight'],
+          'gender': userData['gender'],
+          'dateOfBirth': userData['dateOfBirth']?.toString(),
+        }
+      };
+      
+      print('👤 User profile debug: $result');
+      return result;
+    } catch (e) {
+      print('❌ Error debugging user profile: $e');
+      return {'exists': false, 'error': e.toString()};
+    }
+  }
+
   Future<double> calculateBMR(String uid) async {
     try {
+      print('🔍 Calculating BMR for user: $uid');
+      
+      // Debug user profile first
+      await debugUserProfile(uid);
+      
       // Check if using emulators
       const bool useEmulators = bool.fromEnvironment('USE_FIREBASE_EMULATORS', defaultValue: false);
 
@@ -254,12 +294,41 @@ class FirebaseService extends ChangeNotifier {
         );
         return (response['bmr'] ?? 0).toDouble();
       } else {
-        // Use callable function for production
-        final callable = _functions.httpsCallable('calculateBMR');
-        final result = await callable.call({'uid': uid});
-        return (result.data['bmr'] ?? 0).toDouble();
+        // Use HTTP endpoint for production (more reliable than callable)
+        print('📞 Calling calculateBMR HTTP endpoint...');
+        final response = await _makeHttpRequest(
+          'https://us-central1-samaan-ai-production-2025.cloudfunctions.net/calculateBMRHttp',
+          {'uid': uid},
+        );
+        print('✅ BMR calculation successful: ${response}');
+        return (response['bmr'] ?? 0).toDouble();
       }
+    } on FirebaseFunctionsException catch (e) {
+      print('❌ Firebase Functions Error: ${e.code} - ${e.message}');
+      print('📋 Error details: ${e.details}');
+      
+      // Provide more specific error messages based on the error code
+      String errorMessage = 'Failed to calculate BMR';
+      switch (e.code) {
+        case 'not-found':
+          errorMessage = 'User profile not found. Please complete your profile setup.';
+          break;
+        case 'invalid-argument':
+          errorMessage = 'Missing or invalid profile data. Please check your height, weight, gender, and date of birth in your profile.';
+          break;
+        case 'unauthenticated':
+          errorMessage = 'Authentication required. Please sign in again.';
+          break;
+        case 'internal':
+          errorMessage = 'Internal server error. This might be due to missing profile data or a server issue.';
+          break;
+        default:
+          errorMessage = 'BMR calculation failed: ${e.message}';
+      }
+      
+      throw Exception(errorMessage);
     } catch (e) {
+      print('❌ Unexpected error in calculateBMR: $e');
       throw Exception('Failed to calculate BMR: $e');
     }
   }
@@ -276,28 +345,12 @@ class FirebaseService extends ChangeNotifier {
         final response = await _generateCalorieReportHttp(uid, period);
         return CalorieReport.fromJson(response);
       } else {
-        // Use callable function for production
-        final callable = _functions.httpsCallable('generateCalorieReport');
-        final result = await callable.call({
-          'uid': uid,
-          'period': period,
-        });
-        
-        if (result.data == null) {
-          throw Exception('Cloud function returned null data');
-        }
-        
-        // Convert the data to a proper Map<String, dynamic>
-        final rawData = result.data;
-        final Map<String, dynamic> data = Map<String, dynamic>.from(rawData as Map);
-        
-        // Ensure the data array is properly typed
-        if (data['data'] != null) {
-          final List<dynamic> dataList = List<dynamic>.from(data['data'] as List);
-          data['data'] = dataList.map((item) => Map<String, dynamic>.from(item as Map)).toList();
-        }
-        
-        return CalorieReport.fromJson(data);
+        // Use HTTP endpoint for production (more reliable than callable)
+        final response = await _makeHttpRequest(
+          'https://us-central1-samaan-ai-production-2025.cloudfunctions.net/generateCalorieReportHttp',
+          {'uid': uid, 'period': period},
+        );
+        return CalorieReport.fromJson(response);
       }
     } catch (e) {
       print('CalorieReport generation error: $e');
