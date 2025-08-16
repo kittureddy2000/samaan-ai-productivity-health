@@ -283,8 +283,9 @@ class FirebaseService extends ChangeNotifier {
       // Debug user profile first
       await debugUserProfile(uid);
       
-      // Check if using emulators
+      // Check environment configuration
       const bool useEmulators = bool.fromEnvironment('USE_FIREBASE_EMULATORS', defaultValue: false);
+      const String environment = String.fromEnvironment('ENVIRONMENT', defaultValue: 'staging');
 
       if (useEmulators) {
         // Use HTTP endpoint for emulator to avoid auth issues
@@ -294,12 +295,17 @@ class FirebaseService extends ChangeNotifier {
         );
         return (response['bmr'] ?? 0).toDouble();
       } else {
-        // Use HTTP endpoint for production (more reliable than callable)
-        print('📞 Calling calculateBMR HTTP endpoint...');
-        final response = await _makeHttpRequest(
-          'https://us-central1-samaan-ai-production-2025.cloudfunctions.net/calculateBMRHttp',
-          {'uid': uid},
-        );
+        // Use HTTP endpoint based on environment (more reliable than callable)
+        String endpoint;
+        if (environment == 'production') {
+          endpoint = 'https://us-central1-samaan-ai-production-2025.cloudfunctions.net/calculateBMRHttp';
+        } else {
+          // staging, development, or default
+          endpoint = 'https://us-central1-samaan-ai-staging-2025.cloudfunctions.net/calculateBMRHttp';
+        }
+        
+        print('📞 Calling calculateBMR HTTP endpoint ($environment): $endpoint');
+        final response = await _makeHttpRequest(endpoint, {'uid': uid});
         print('✅ BMR calculation successful: ${response}');
         return (response['bmr'] ?? 0).toDouble();
       }
@@ -337,19 +343,25 @@ class FirebaseService extends ChangeNotifier {
 
   Future<CalorieReport> generateCalorieReport(String uid, String period) async {
     try {
-      // Check if using emulators
+      // Check environment configuration
       const bool useEmulators = bool.fromEnvironment('USE_FIREBASE_EMULATORS', defaultValue: false);
+      const String environment = String.fromEnvironment('ENVIRONMENT', defaultValue: 'staging');
 
       if (useEmulators) {
         // Use HTTP endpoint for emulator to avoid auth issues
         final response = await _generateCalorieReportHttp(uid, period);
         return CalorieReport.fromJson(response);
       } else {
-        // Use HTTP endpoint for production (more reliable than callable)
-        final response = await _makeHttpRequest(
-          'https://us-central1-samaan-ai-production-2025.cloudfunctions.net/generateCalorieReportHttp',
-          {'uid': uid, 'period': period},
-        );
+        // Use HTTP endpoint based on environment (more reliable than callable)
+        String endpoint;
+        if (environment == 'production') {
+          endpoint = 'https://us-central1-samaan-ai-production-2025.cloudfunctions.net/generateCalorieReportHttp';
+        } else {
+          // staging, development, or default
+          endpoint = 'https://us-central1-samaan-ai-staging-2025.cloudfunctions.net/generateCalorieReportHttp';
+        }
+        
+        final response = await _makeHttpRequest(endpoint, {'uid': uid, 'period': period});
         return CalorieReport.fromJson(response);
       }
     } catch (e) {

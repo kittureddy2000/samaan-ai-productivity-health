@@ -26,7 +26,7 @@ cert_hash = android_client['android_info']['certificate_hash']
 print(f'✅ Package Name: {package_name}')
 print(f'✅ Certificate Hash: {cert_hash}')
 
-if package_name != 'com.samaanai.productivityhealth':
+if package_name != 'com.samaanai.productivityhealth.prod':
     print(f'❌ Unexpected package name: {package_name}')
     sys.exit(1)
 
