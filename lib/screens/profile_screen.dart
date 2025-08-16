@@ -47,15 +47,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     try {
       final profile = await context.read<FirebaseService>().getUserProfile(user.uid);
-      setState(() {
-        _userProfile = profile;
-        if (profile != null) {
-          _heightController.text = profile.height.toString();
-          _weightController.text = profile.weight.toString();
-          _selectedDate = profile.dateOfBirth;
-          _selectedGender = profile.gender;
+      
+      // Sync profile picture if it's missing or different from Firebase Auth
+      if (user.photoURL != null && user.photoURL != profile?.photoURL) {
+        try {
+          await context.read<FirebaseService>().syncProfilePicture(user.uid);
+          // Reload profile to get updated photo URL
+          final updatedProfile = await context.read<FirebaseService>().getUserProfile(user.uid);
+          setState(() {
+            _userProfile = updatedProfile;
+            if (updatedProfile != null) {
+              _heightController.text = updatedProfile.height.toString();
+              _weightController.text = updatedProfile.weight.toString();
+              _selectedDate = updatedProfile.dateOfBirth;
+              _selectedGender = updatedProfile.gender;
+            }
+          });
+        } catch (syncError) {
+          // If sync fails, continue with original profile
+          print('Profile picture sync failed, using original profile: $syncError');
+          setState(() {
+            _userProfile = profile;
+            if (profile != null) {
+              _heightController.text = profile.height.toString();
+              _weightController.text = profile.weight.toString();
+              _selectedDate = profile.dateOfBirth;
+              _selectedGender = profile.gender;
+            }
+          });
         }
-      });
+      } else {
+        setState(() {
+          _userProfile = profile;
+          if (profile != null) {
+            _heightController.text = profile.height.toString();
+            _weightController.text = profile.weight.toString();
+            _selectedDate = profile.dateOfBirth;
+            _selectedGender = profile.gender;
+          }
+        });
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -321,13 +352,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         CircleAvatar(
           radius: 60,
           backgroundColor: Colors.blue.shade100,
-          child: user?.photoURL != null
-              ? ClipOval(child: Image.network(user!.photoURL!, fit: BoxFit.cover))
-              : Icon(
-                  Icons.person,
-                  size: 60,
-                  color: Colors.blue.shade400,
-                ),
+          child: _buildProfileImage(user),
         ),
         const SizedBox(height: 24),
 
@@ -441,6 +466,52 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       ],
     );
+  }
+
+  Widget _buildProfileImage(User? user) {
+    // Try multiple sources for profile image:
+    // 1. Firebase Auth photoURL (most current)
+    // 2. Stored profile photoURL (backup)
+    // 3. Default icon
+    
+    String? imageUrl = user?.photoURL ?? _userProfile?.photoURL;
+    
+    if (imageUrl != null && imageUrl.isNotEmpty) {
+      return ClipOval(
+        child: Image.network(
+          imageUrl,
+          width: 120,
+          height: 120,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            // If image fails to load, show default icon
+            print('Failed to load profile image: $error');
+            return Icon(
+              Icons.person,
+              size: 60,
+              color: Colors.blue.shade400,
+            );
+          },
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return Center(
+              child: CircularProgressIndicator(
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                    : null,
+              ),
+            );
+          },
+        ),
+      );
+    } else {
+      // No image URL available, show default icon
+      return Icon(
+        Icons.person,
+        size: 60,
+        color: Colors.blue.shade400,
+      );
+    }
   }
 
   Widget _buildDetailCard(String title, String value, IconData icon) {

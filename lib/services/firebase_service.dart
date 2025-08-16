@@ -82,6 +82,26 @@ class FirebaseService extends ChangeNotifier {
     }
   }
 
+  // Update profile with current Firebase Auth photo URL
+  Future<void> syncProfilePicture(String uid) async {
+    try {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser?.photoURL != null) {
+        await _firestore
+            .collection(usersCollection)
+            .doc(uid)
+            .update({
+              'photoURL': currentUser!.photoURL,
+              'updatedAt': Timestamp.fromDate(DateTime.now()),
+            });
+        print('✅ Synced profile picture: ${currentUser.photoURL}');
+      }
+    } catch (e) {
+      print('❌ Failed to sync profile picture: $e');
+      // Don't throw error - this is not critical
+    }
+  }
+
   // Daily Entry Methods
   Future<void> createOrUpdateDailyEntry(DailyEntry entry) async {
     try {

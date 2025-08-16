@@ -4,6 +4,7 @@ class UserProfile {
   final String uid;
   final String email;
   final String? displayName;
+  final String? photoURL;
   final DateTime dateOfBirth;
   final double height; // in cm
   final double weight; // in lbs
@@ -15,6 +16,7 @@ class UserProfile {
     required this.uid,
     required this.email,
     this.displayName,
+    this.photoURL,
     required this.dateOfBirth,
     required this.height,
     required this.weight,
@@ -40,6 +42,7 @@ class UserProfile {
       'uid': uid,
       'email': email,
       'displayName': displayName,
+      'photoURL': photoURL,
       'dateOfBirth': Timestamp.fromDate(dateOfBirth),
       'height': height,
       'weight': weight,
@@ -60,6 +63,7 @@ class UserProfile {
       uid: data['uid'] as String? ?? '',
       email: data['email'] as String? ?? '',
       displayName: data['displayName'] as String?,
+      photoURL: data['photoURL'] as String?,
       dateOfBirth: _safeTimestampToDate(data['dateOfBirth']),
       height: _safeToDouble(data['height']) ?? 0.0,
       weight: _safeToDouble(data['weight']) ?? 70.0,
@@ -92,6 +96,7 @@ class UserProfile {
     String? uid,
     String? email,
     String? displayName,
+    String? photoURL,
     DateTime? dateOfBirth,
     double? height,
     double? weight,
@@ -103,6 +108,7 @@ class UserProfile {
       uid: uid ?? this.uid,
       email: email ?? this.email,
       displayName: displayName ?? this.displayName,
+      photoURL: photoURL ?? this.photoURL,
       dateOfBirth: dateOfBirth ?? this.dateOfBirth,
       height: height ?? this.height,
       weight: weight ?? this.weight,

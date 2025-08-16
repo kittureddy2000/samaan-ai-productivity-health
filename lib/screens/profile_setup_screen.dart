@@ -67,6 +67,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         uid: user.uid,
         email: user.email!,
         displayName: user.displayName,
+        photoURL: user.photoURL, // Capture profile picture from Google sign-in
         dateOfBirth: _selectedDate!,
         height: double.parse(_heightController.text),
         weight: double.parse(_weightController.text),
