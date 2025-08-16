@@ -51,7 +51,7 @@ class FirebaseConfig {
   
   // Production Firebase configuration (Web)
   static const FirebaseOptions _productionWebConfig = FirebaseOptions(
-    apiKey: "AIzaSyC-W0WnHal4p69e0NLEMfbqX4wulxc527U",
+    apiKey: "AIzaSyCYPDJDhMuH1wEDCGJ8sjAERA445w5BFRg",
     authDomain: "samaan-ai-production-2025.firebaseapp.com",
     projectId: "samaan-ai-production-2025",
     storageBucket: "samaan-ai-production-2025.firebasestorage.app",
