@@ -129,17 +129,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-            // Welcome Message
-            Text(
-              'Welcome back!',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
+              // Welcome Message
+              Text(
+                'Welcome back!',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            
-            // Date Navigation
-            Row(
+              const SizedBox(height: 8),
+              
+              // Date Navigation
+              Row(
               children: [
                 // Previous day button
                 IconButton(
