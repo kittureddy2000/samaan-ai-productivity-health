@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
+import '../services/firebase_service.dart';
+import '../models/user_profile.dart';
 import 'dashboard_screen.dart';
 
 class MainDashboardScreen extends StatelessWidget {
@@ -37,11 +40,37 @@ class MainDashboardScreen extends StatelessWidget {
             ],
             child: Padding(
               padding: const EdgeInsets.all(8.0),
-              child: CircleAvatar(
-                child: Text(
-                  user?.email?.substring(0, 1).toUpperCase() ?? 'U',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
+              child: FutureBuilder<UserProfile?>(
+                future: user != null 
+                    ? context.read<FirebaseService>().getUserProfile(user!.uid)
+                    : Future.value(null),
+                builder: (context, snapshot) {
+                  final profile = snapshot.data;
+                  final photoURL = user?.photoURL ?? profile?.photoURL;
+                  
+                  return CircleAvatar(
+                    backgroundColor: Colors.white,
+                    child: photoURL != null && photoURL.isNotEmpty
+                        ? ClipOval(
+                            child: Image.network(
+                              photoURL,
+                              width: 32,
+                              height: 32,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Text(
+                                  user?.email?.substring(0, 1).toUpperCase() ?? 'U',
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                );
+                              },
+                            ),
+                          )
+                        : Text(
+                            user?.email?.substring(0, 1).toUpperCase() ?? 'U',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                  );
+                },
               ),
             ),
           ),

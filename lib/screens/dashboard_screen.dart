@@ -111,13 +111,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final weightLossGoal = _todaySummary!['weightLossGoal'] as WeightLossGoal?;
     final targetDailyCalories = _todaySummary!['targetDailyCalories'] as double?;
 
-    return RefreshIndicator(
-      onRefresh: _loadTodaySummary,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Theme.of(context).colorScheme.primary.withOpacity(0.02),
+            Theme.of(context).colorScheme.surface,
+          ],
+        ),
+      ),
+      child: RefreshIndicator(
+        onRefresh: _loadTodaySummary,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             // Welcome Message
             Text(
               'Welcome back!',
@@ -203,7 +214,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     Icons.local_fire_department,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
                 Expanded(
                   child: _buildSummaryCard(
                     'Net Deficit',
@@ -215,7 +226,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Row(
               children: [
                 Expanded(
@@ -227,7 +238,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     Icons.restaurant,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
                 Expanded(
                   child: _buildSummaryCard(
                     'Burned',
@@ -393,7 +404,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -408,46 +419,72 @@ class _DashboardScreenState extends State<DashboardScreen> {
     bool fullWidth = false,
   }) {
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon, color: color, size: 20),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            RichText(
-              text: TextSpan(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white,
+              color.withOpacity(0.03),
+            ],
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
                 children: [
-                  TextSpan(
-                    text: value,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: color,
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(6),
                     ),
+                    child: Icon(icon, color: color, size: 16),
                   ),
-                  TextSpan(
-                    text: ' $unit',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                 ],
               ),
-            ),
-          ],
+              const SizedBox(height: 8),
+              RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: value,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: color,
+                        fontSize: fullWidth ? 24 : 20,
+                      ),
+                    ),
+                    TextSpan(
+                      text: ' $unit',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -708,6 +745,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_selectedIndex == 0 ? 'Fitness Tracker' : 'Reports'),
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
+        elevation: 0,
+        surfaceTintColor: Theme.of(context).colorScheme.surfaceTint,
         actions: [
           // Profile icon with dropdown
           const ProfileMenuWidget(),
