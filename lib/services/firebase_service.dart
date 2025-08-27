@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -11,41 +10,25 @@ import '../models/calorie_report.dart';
 import '../models/weight_loss_goal.dart';
 
 class FirebaseService extends ChangeNotifier {
-  late final FirebaseFirestore _firestore;
-  late final FirebaseFunctions _functions;
+  final FirebaseAuth _auth;
+  final FirebaseFirestore _firestore;
+  final http.Client _httpClient;
+
+  FirebaseService({
+    required FirebaseAuth auth,
+    required FirebaseFirestore firestore,
+    required http.Client httpClient,
+  })  : _auth = auth,
+        _firestore = firestore,
+        _httpClient = httpClient;
 
   // Collections
   static const String usersCollection = 'users';
   static const String dailyEntriesCollection = 'dailyEntries';
   static const String weightLossGoalsCollection = 'weightLossGoals';
 
-  FirebaseService() {
-    _initializeServices();
-  }
-
-  void _initializeServices() {
-    _firestore = FirebaseFirestore.instance;
-    _functions = FirebaseFunctions.instance;
-
-    // Check if we should use emulators (for local development)
-    const bool useEmulators = bool.fromEnvironment('USE_FIREBASE_EMULATORS', defaultValue: false);
-
-    if (useEmulators) {
-      print('🧪 Using Firebase Emulators for local development');
-      
-      // Connect to Firestore emulator
-      _firestore.useFirestoreEmulator('localhost', 8080);
-      
-      // Connect to Functions emulator
-      _functions.useFunctionsEmulator('localhost', 5001);
-      
-      // Connect to Auth emulator
-      FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
-    }
-  }
-
   // Get current user ID
-  String? get _currentUserId => FirebaseAuth.instance.currentUser?.uid;
+  String? get _currentUserId => _auth.currentUser?.uid;
 
   // User Profile Methods
   Future<void> createUserProfile(UserProfile profile) async {
@@ -85,7 +68,7 @@ class FirebaseService extends ChangeNotifier {
   // Update profile with current Firebase Auth photo URL
   Future<void> syncProfilePicture(String uid) async {
     try {
-      final currentUser = FirebaseAuth.instance.currentUser;
+      final currentUser = _auth.currentUser;
       if (currentUser?.photoURL != null) {
         await _firestore
             .collection(usersCollection)
@@ -409,31 +392,17 @@ class FirebaseService extends ChangeNotifier {
   Future<Map<String, dynamic>> _makeHttpRequest(String url, Map<String, dynamic> data) async {
     try {
       final uri = Uri.parse(url);
-      if (kIsWeb) {
-        // Use package:http on web (dart:io not supported)
-        final resp = await http.post(
-          uri,
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode(data),
-        );
-        if (resp.statusCode == 200) {
-          return jsonDecode(resp.body) as Map<String, dynamic>;
-        }
-        throw Exception('HTTP ${resp.statusCode}: ${resp.body}');
-      } else {
-        // Use dart:io HttpClient on mobile/desktop
-        final request = await HttpClient().postUrl(uri);
-        request.headers.set('Content-Type', 'application/json');
-        request.write(jsonEncode(data));
-
-        final response = await request.close();
-        final responseBody = await response.transform(utf8.decoder).join();
-
-        if (response.statusCode == 200) {
-          return jsonDecode(responseBody) as Map<String, dynamic>;
-        }
-        throw Exception('HTTP ${response.statusCode}: $responseBody');
+      // Use the injected _httpClient for testability
+      final resp = await _httpClient.post(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(data),
+      );
+      
+      if (resp.statusCode == 200) {
+        return jsonDecode(resp.body) as Map<String, dynamic>;
       }
+      throw Exception('HTTP ${resp.statusCode}: ${resp.body}');
     } catch (e) {
       throw Exception('HTTP request failed: $e');
     }

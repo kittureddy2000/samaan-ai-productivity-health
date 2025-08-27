@@ -306,8 +306,12 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         title: Text(_selectedReportType == 'calories' ? 'Calorie Reports' : _selectedReportType == 'weight' ? 'Weight Reports' : 'Water Intake Reports'),
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        elevation: 1,
+        shadowColor: Colors.black.withOpacity(0.1),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
@@ -318,215 +322,108 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Description
-            Text(
-              _selectedReportType == 'calories' 
-                  ? 'Track your calorie deficit over time'
-                  : _selectedReportType == 'weight'
-                  ? 'Track your weight changes over time'
-                  : 'Track your daily water intake over time',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Report Type Selection
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Report Type',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    SegmentedButton<String>(
-                      segments: const [
-                        ButtonSegment(
-                          value: 'calories',
-                          label: Text('Calories'),
-                          icon: Icon(Icons.local_fire_department),
-                        ),
-                        ButtonSegment(
-                          value: 'weight',
-                          label: Text('Weight'),
-                          icon: Icon(Icons.monitor_weight),
-                        ),
-                        ButtonSegment(
-                          value: 'glasses',
-                          label: Text('Water'),
-                          icon: Icon(Icons.local_drink),
-                        ),
-                      ],
-                      selected: {_selectedReportType},
-                      onSelectionChanged: (Set<String> selection) {
-                        setState(() {
-                          _selectedReportType = selection.first;
-                          // Auto-set yearly for weight and glasses reports
-                          if (_selectedReportType == 'weight' || _selectedReportType == 'glasses') {
-                            _selectedPeriod = 'yearly';
-                          }
-                        });
-                        _loadReport();
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            _buildFilterControls(),
             const SizedBox(height: 16),
-
-            // Period Selection with Navigation
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Time Period',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    
-                    // Period Type Selection (simplified for weight and glasses)
-                    SegmentedButton<String>(
-                      segments: (_selectedReportType == 'weight' || _selectedReportType == 'glasses') 
-                          ? const [
-                              ButtonSegment(
-                                value: 'yearly',
-                                label: Text('Yearly'),
-                                icon: Icon(Icons.calendar_today),
-                              ),
-                            ]
-                          : const [
-                              ButtonSegment(
-                                value: 'weekly',
-                                label: Text('Weekly'),
-                                icon: Icon(Icons.view_week),
-                              ),
-                              ButtonSegment(
-                                value: 'monthly',
-                                label: Text('Monthly'),
-                                icon: Icon(Icons.calendar_month),
-                              ),
-                              ButtonSegment(
-                                value: 'yearly',
-                                label: Text('Yearly'),
-                                icon: Icon(Icons.calendar_today),
-                              ),
-                            ],
-                      selected: {_selectedPeriod},
-                      onSelectionChanged: (Set<String> selection) {
-                        setState(() {
-                          _selectedPeriod = selection.first;
-                          // Auto-set yearly for weight and glasses reports
-                          if (_selectedReportType == 'weight' || _selectedReportType == 'glasses') {
-                            _selectedPeriod = 'yearly';
-                          }
-                        });
-                        _loadReport();
-                      },
-                    ),
-                    
-                    const SizedBox(height: 16),
-                    
-                    // Navigation Controls
-                    if (_selectedPeriod == 'weekly') ...[
-                      Row(
-                        children: [
-                          IconButton(
-                            onPressed: _goToPreviousWeek,
-                            icon: const Icon(Icons.chevron_left),
-                            tooltip: 'Previous Week',
-                          ),
-                          Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                'Week of ${DateFormat('MMM d, yyyy').format(_currentWeekStart)}',
-                                textAlign: TextAlign.center,
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                          IconButton(
-                            onPressed: _currentWeekStart.isBefore(DateTime.now().subtract(const Duration(days: 7))) 
-                                ? _goToNextWeek 
-                                : null,
-                            icon: const Icon(Icons.chevron_right),
-                            tooltip: 'Next Week',
-                          ),
-                        ],
-                      ),
-                    ] else if (_selectedPeriod == 'monthly') ...[
-                      Row(
-                        children: [
-                          IconButton(
-                            onPressed: _prevMonth,
-                            icon: const Icon(Icons.chevron_left),
-                            tooltip: 'Previous Month',
-                          ),
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: _selectMonth,
-                              icon: const Icon(Icons.calendar_month),
-                              label: Text(DateFormat('MMMM yyyy').format(_selectedMonth)),
-                            ),
-                          ),
-                          IconButton(
-                            onPressed: DateTime(_selectedMonth.year, _selectedMonth.month + 1, 1)
-                                    .isAfter(DateTime(DateTime.now().year, DateTime.now().month, 1))
-                                ? null
-                                : _nextMonth,
-                            icon: const Icon(Icons.chevron_right),
-                            tooltip: 'Next Month',
-                          ),
-                        ],
-                      ),
-                    ] else if (_selectedPeriod == 'yearly') ...[
-                      Row(
-                        children: [
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: _selectYear,
-                              icon: const Icon(Icons.calendar_today),
-                              label: Text(_selectedYear.year.toString()),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Loading or Report Content
             Expanded(
-              child: _isLoading 
+              child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
-                  : _currentReport == null
+                  : _currentReport == null || _currentReport!.data.isEmpty
                       ? _buildNoDataWidget()
                       : _buildReportContent(),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildFilterControls() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Report Options',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            _buildFilterRow(
+              'Report Type',
+              ['calories', 'weight', 'glasses'],
+              _selectedReportType,
+              (type) {
+                setState(() {
+                  _selectedReportType = type;
+                  if (type == 'weight' || type == 'glasses') {
+                    _selectedPeriod = 'yearly';
+                  }
+                });
+                _loadReport();
+              },
+            ),
+            if (_selectedReportType == 'calories') ...[
+              const SizedBox(height: 12),
+              _buildFilterRow(
+                'Time Period',
+                ['weekly', 'monthly', 'yearly'],
+                _selectedPeriod,
+                (period) {
+                  setState(() {
+                    _selectedPeriod = period;
+                  });
+                  _loadReport();
+                },
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterRow(String title, List<String> options, String selectedValue, ValueChanged<String> onSelected) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 8),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Wrap(
+            spacing: 8.0,
+            children: options.map((option) {
+              final isSelected = selectedValue == option;
+              return ChoiceChip(
+                label: Text(option[0].toUpperCase() + option.substring(1)),
+                selected: isSelected,
+                onSelected: (selected) {
+                  if (selected) {
+                    onSelected(option);
+                  }
+                },
+                backgroundColor: Theme.of(context).colorScheme.surface,
+                selectedColor: Theme.of(context).colorScheme.primaryContainer,
+                labelStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: isSelected 
+                      ? Theme.of(context).colorScheme.onPrimaryContainer
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  side: BorderSide(
+                    color: isSelected 
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.outlineVariant,
+                  ),
+                ),
+                showCheckmark: false,
+              );
+            }).toList(),
+          ),
+        ),
+      ],
     );
   }
 
@@ -573,71 +470,48 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
   Widget _buildReportContent() {
     final report = _currentReport!;
     
-    // Check if report has meaningful data
-    if (report.data.isEmpty) {
-      return Center(
-        child: Card(
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.timeline_outlined,
-                  size: 64,
-                  color: Colors.grey[400],
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'No Daily Entries Found',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Add some daily food and exercise logs to see your calorie deficit trends',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[600],
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    // Navigate to daily log screen
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const DailyLogScreen(),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.edit_calendar),
-                  label: const Text('Add Daily Log'),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-    
     return RefreshIndicator(
       onRefresh: _loadReport,
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Summary Cards
-            if (_selectedReportType == 'calories') ...[
-              _buildSummaryCards(report),
-              const SizedBox(height: 24),
-            ] else if (_selectedReportType == 'glasses') ...[
-              _buildGlassesSummaryCards(report),
-              const SizedBox(height: 24),
-            ],
+      child: ListView(
+        children: [
+          // Summary Cards
+          if (_selectedReportType == 'calories') ...[
+            _buildSummaryCards(report),
+          ] else if (_selectedReportType == 'glasses') ...[
+            _buildGlassesSummaryCards(report),
+          ],
 
-            // Chart Section
+          // Chart Section
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _getChartTitle(),
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _getChartDescription(),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    height: 300,
+                    child: _buildChart(report),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Data Table
+          if (report.data.isNotEmpty) ...[
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -645,73 +519,19 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _getChartTitle(),
+                      'Detailed Data',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _getChartDescription(),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      height: 300,
-                      child: _buildChart(report),
-                    ),
+                    const SizedBox(height: 16),
+                    _buildDataTable(report),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 16),
-
-            // Data Table
-            if (report.data.isNotEmpty) ...[
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Detailed Data',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Report Period: ${report.period}',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'From ${DateFormat('MMM d, yyyy').format(report.startDate)} to ${DateFormat('MMM d, yyyy').format(report.endDate)}',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Showing ${report.daysWithData} days with logged data out of ${report.totalDays} total days in ${report.period} period.',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildDataTable(report),
-                    ],
-                  ),
-                ),
-              ),
-            ],
           ],
-        ),
+        ],
       ),
     );
   }
@@ -850,9 +670,7 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
                 Expanded(
                   child: Text(
                     title,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
-                    ),
+                    style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ),
               ],
@@ -864,15 +682,13 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
                   TextSpan(
                     text: value,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: color,
-                    ),
+                          fontWeight: FontWeight.bold,
+                          color: color,
+                        ),
                   ),
                   TextSpan(
                     text: ' $unit',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[600],
-                    ),
+                    style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],
               ),

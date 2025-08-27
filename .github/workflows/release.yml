@@ -42,44 +42,54 @@ jobs:
     - name: Install dependencies
       run: flutter pub get
       
-    - name: Setup production google-services.json  
+    - name: Setup production google-services.json
       run: |
-        # Copy the production google-services.json that has the correct package name
-        cp android/app/google-services-production.json android/app/google-services.json
-        # Validate the JSON
+        echo "${{ secrets.GOOGLE_SERVICES_PROD }}" | base64 -d > android/app/google-services.json
+        # Validate the decoded JSON
         python3 -m json.tool android/app/google-services.json > /dev/null
         echo "✅ Production google-services.json is valid"
         echo "Package name should be: com.samaanai.productivityhealth.prod"
         grep -o '"package_name"[[:space:]]*:[[:space:]]*"[^"]*"' android/app/google-services.json
         
-    - name: Setup production debug keystore (same as staging for OAuth compatibility)
+    - name: Setup production keystore
       run: |
-        echo "🔧 Using same debug keystore as staging for OAuth compatibility"
+        echo "🔧 Setting up production keystore (separate from staging)"
         
-        # Create .android directory and decode the debug keystore (same as staging)
+        # Create .android directory and decode the production keystore
         mkdir -p /home/runner/.config/.android/
-        echo "${{ secrets.DEBUG_KEYSTORE }}" | base64 -d > /home/runner/.config/.android/debug.keystore
+        echo "${{ secrets.PRODUCTION_KEYSTORE }}" | base64 -d > android/app/production-keystore.jks
         
-        # Verify the keystore and get SHA-1
-        echo "🔍 Verifying debug keystore SHA-1..."
-        KEYSTORE_SHA1=$(keytool -list -v -keystore /home/runner/.config/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android | grep "SHA1:" | sed 's/.*SHA1: //' | tr -d ' ')
+        # Verify the keystore exists and get SHA-1
+        echo "🔍 Verifying production keystore SHA-1..."
+        KEYSTORE_SHA1=$(keytool -list -v -keystore android/app/production-keystore.jks -alias production -storepass "${{ secrets.PRODUCTION_KEYSTORE_PASSWORD }}" -keypass "${{ secrets.PRODUCTION_KEY_PASSWORD }}" | grep "SHA1:" | sed 's/.*SHA1: //' | tr -d ' ')
         echo "🔑 Production keystore SHA-1: $KEYSTORE_SHA1"
         
-        # Expected SHA-1 (should match OAuth client configuration)
-        EXPECTED_SHA1="53315440bd500648d1034bdf6fa462fce03775fa"
+        # The SHA-1 should be different from staging to avoid conflicts
         KEYSTORE_SHA1_CLEAN=$(echo "$KEYSTORE_SHA1" | tr -d ':' | tr '[:upper:]' '[:lower:]')
+        echo "🔍 Production SHA-1 (clean): $KEYSTORE_SHA1_CLEAN"
+        echo "📋 This SHA-1 should be registered in Firebase for package: com.samaanai.productivityhealth.prod"
         
-        if [ "$KEYSTORE_SHA1_CLEAN" = "$EXPECTED_SHA1" ]; then
-          echo "✅ SUCCESS: Production keystore SHA-1 matches OAuth client configuration!"
-        else
-          echo "❌ FATAL: SHA-1 mismatch!"
-          echo "   Expected: $EXPECTED_SHA1"  
-          echo "   Got:      $KEYSTORE_SHA1_CLEAN"
+        # Warning about staging conflict
+        STAGING_SHA1="53315440bd500648d1034bdf6fa462fce03775fa"
+        if [ "$KEYSTORE_SHA1_CLEAN" = "$STAGING_SHA1" ]; then
+          echo "❌ WARNING: Production SHA-1 matches staging SHA-1!"
+          echo "   This will cause Firebase OAuth conflicts."
+          echo "   Production should use a different keystore."
           exit 1
+        else
+          echo "✅ SUCCESS: Production SHA-1 is different from staging (no conflict)"
         fi
         
     - name: Run tests
       run: flutter test
+        
+    - name: Configure Firebase Options for Production
+      run: |
+        sed -i "s/apiKey: '.*'/apiKey: '${{ secrets.FIREBASE_API_KEY_PRODUCTION }}'/g" lib/firebase_options.dart
+        sed -i "s/appId: '1:[0-9]*:web:[a-zA-Z0-9]*'/appId: '${{ secrets.FIREBASE_APP_ID_WEB_PRODUCTION }}'/g" lib/firebase_options.dart
+        sed -i "s/appId: 'YOUR_ANDROID_APP_ID_HERE'/appId: '${{ secrets.FIREBASE_APP_ID_ANDROID_PRODUCTION }}'/g" lib/firebase_options.dart
+        sed -i "s/appId: 'YOUR_IOS_APP_ID_HERE'/appId: '${{ secrets.FIREBASE_APP_ID_IOS_PRODUCTION }}'/g" lib/firebase_options.dart
+        echo "✅ Replaced placeholders in firebase_options.dart with production secrets"
         
     - name: Replace Firebase configuration in web template
       run: |
@@ -96,8 +106,7 @@ jobs:
     - name: Build Flutter Web (Production)
       run: |
         flutter build web --release \
-          --dart-define=ENVIRONMENT=production \
-          --dart-define=GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID_PRODUCTION }}
+          --dart-define=ENVIRONMENT=production
       
     - name: Setup Firebase Service Account
       run: |

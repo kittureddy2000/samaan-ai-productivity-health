@@ -4,6 +4,8 @@ import '../services/auth_service.dart';
 import '../services/firebase_service.dart';
 import '../models/user_profile.dart';
 import 'dashboard_screen.dart'; // Added import for DashboardScreen
+import 'package:intl/intl.dart'; // Added import for DateFormat
+import 'auth_gate.dart'; // Added import for AuthGate
 
 class ProfileSetupScreen extends StatefulWidget {
   const ProfileSetupScreen({super.key});
@@ -14,102 +16,21 @@ class ProfileSetupScreen extends StatefulWidget {
 
 class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
   final _heightController = TextEditingController();
   final _weightController = TextEditingController();
   DateTime? _selectedDate;
   String _selectedGender = 'male';
+  String _selectedActivityLevel = 'sedentary'; // Added for activity level
+  String _selectedGoal = 'Lose Weight'; // Added for main goal
   bool _isLoading = false;
 
   @override
   void dispose() {
+    _nameController.dispose();
     _heightController.dispose();
     _weightController.dispose();
     super.dispose();
-  }
-
-  Future<void> _selectDate() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now().subtract(const Duration(days: 365 * 25)), // 25 years ago
-      firstDate: DateTime.now().subtract(const Duration(days: 365 * 100)), // 100 years ago
-      lastDate: DateTime.now().subtract(const Duration(days: 365 * 13)), // 13 years ago
-      helpText: 'Select your date of birth',
-    );
-
-    if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked;
-      });
-    }
-  }
-
-  Future<void> _saveProfile() async {
-    if (!_formKey.currentState!.validate()) return;
-    if (_selectedDate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select your date of birth'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      final user = context.read<AuthService>().currentUser;
-      if (user == null) throw Exception('User not authenticated');
-
-      final profile = UserProfile(
-        uid: user.uid,
-        email: user.email!,
-        displayName: user.displayName,
-        photoURL: user.photoURL, // Capture profile picture from Google sign-in
-        dateOfBirth: _selectedDate!,
-        height: double.parse(_heightController.text),
-        weight: double.parse(_weightController.text),
-        gender: _selectedGender,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-
-      await context.read<FirebaseService>().createUserProfile(profile);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profile created successfully! Welcome to Fitness Tracker!'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
-          ),
-        );
-        
-        // Navigate to dashboard by triggering AuthGate rebuild
-        // We can do this by calling setState on a parent or using Navigator replacement
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const DashboardScreen()),
-          (route) => false,
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to create profile: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
   }
 
   @override
@@ -167,82 +88,23 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     ),
                     const SizedBox(height: 48),
 
-                    // Height Field
+                    // Personal Information
+                    Text(
+                      'Personal Information',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 16),
                     TextFormField(
-                      controller: _heightController,
-                      keyboardType: TextInputType.number,
+                      controller: _nameController,
                       decoration: const InputDecoration(
-                        labelText: 'Height (cm)',
-                        prefixIcon: Icon(Icons.height),
-                        border: OutlineInputBorder(),
-                        suffixText: 'cm',
+                        labelText: 'Name',
+                        prefixIcon: Icon(Icons.person),
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your height';
-                        }
-                        final height = double.tryParse(value);
-                        if (height == null || height < 50 || height > 300) {
-                          return 'Please enter a valid height (50-300 cm)';
-                        }
-                        return null;
-                      },
+                      validator: (value) => value!.isEmpty ? 'Please enter your name' : null,
                     ),
-                    const SizedBox(height: 24),
-
-                    // Weight Field
-                    TextFormField(
-                      controller: _weightController,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Weight (lbs)',
-                        prefixIcon: Icon(Icons.monitor_weight),
-                        border: OutlineInputBorder(),
-                        suffixText: 'lbs',
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your weight';
-                        }
-                        final weight = double.tryParse(value);
-                        if (weight == null || weight < 45 || weight > 1100) {
-                          return 'Please enter a valid weight (45-1100 lbs)';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Date of Birth Field
-                    InkWell(
-                      onTap: _selectDate,
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.calendar_today, color: Colors.grey),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                _selectedDate == null
-                                    ? 'Select Date of Birth'
-                                    : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: _selectedDate == null ? Colors.grey : Colors.black,
-                                ),
-                              ),
-                            ),
-                            const Icon(Icons.arrow_drop_down, color: Colors.grey),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
+                    _buildDatePicker(),
+                    const SizedBox(height: 16),
 
                     // Gender Selection
                     const Text(
@@ -283,7 +145,101 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 48),
+                    const SizedBox(height: 24),
+
+                    // Physical Metrics
+                    Text(
+                      'Physical Metrics',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _heightController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Height (cm)',
+                        prefixIcon: Icon(Icons.height),
+                        border: OutlineInputBorder(),
+                        suffixText: 'cm',
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your height';
+                        }
+                        final height = double.tryParse(value);
+                        if (height == null || height < 50 || height > 300) {
+                          return 'Please enter a valid height (50-300 cm)';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _weightController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Weight (lbs)',
+                        prefixIcon: Icon(Icons.monitor_weight),
+                        border: OutlineInputBorder(),
+                        suffixText: 'lbs',
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your weight';
+                        }
+                        final weight = double.tryParse(value);
+                        if (weight == null || weight < 45 || weight > 1100) {
+                          return 'Please enter a valid weight (45-1100 lbs)';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Activity & Goals
+                    Text(
+                      'Activity & Goals',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<String>(
+                      value: _selectedActivityLevel,
+                      decoration: const InputDecoration(
+                        labelText: 'Activity Level',
+                        prefixIcon: Icon(Icons.directions_run),
+                      ),
+                      items: ['Sedentary', 'Lightly Active', 'Moderately Active', 'Very Active', 'Extra Active']
+                          .map((label) => DropdownMenuItem(
+                                value: label.toLowerCase(),
+                                child: Text(label),
+                              ))
+                          .toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedActivityLevel = value!;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<String>(
+                      value: _selectedGoal,
+                      decoration: const InputDecoration(
+                        labelText: 'Main Goal',
+                        prefixIcon: Icon(Icons.flag),
+                      ),
+                      items: ['Lose Weight', 'Maintain Weight', 'Gain Weight']
+                          .map((label) => DropdownMenuItem(
+                                value: label,
+                                child: Text(label),
+                              ))
+                          .toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedGoal = value!;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 32),
 
                     // Save Button
                     ElevatedButton(
@@ -297,7 +253,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       child: _isLoading
                           ? const CircularProgressIndicator()
                           : const Text(
-                              'Complete Setup',
+                              'Save and Continue',
                               style: TextStyle(fontSize: 16),
                             ),
                     ),
@@ -339,6 +295,113 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _selectDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now().subtract(const Duration(days: 365 * 25)), // 25 years ago
+      firstDate: DateTime.now().subtract(const Duration(days: 365 * 100)), // 100 years ago
+      lastDate: DateTime.now().subtract(const Duration(days: 365 * 13)), // 13 years ago
+      helpText: 'Select your date of birth',
+    );
+
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+      });
+    }
+  }
+
+  void _showSnackBar(String message, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError
+            ? Theme.of(context).colorScheme.error
+            : Theme.of(context).colorScheme.primary, // Using primary for success
+      ),
+    );
+  }
+
+  Future<void> _saveProfile() async {
+    if (!_formKey.currentState!.validate()) {
+      _showSnackBar('Please fix the errors in the form.', isError: true);
+      return;
+    }
+    if (_selectedDate == null) {
+      _showSnackBar('Please select your date of birth.', isError: true);
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final user = context.read<AuthService>().currentUser!;
+      final now = DateTime.now();
+      final profile = UserProfile(
+        uid: user.uid,
+        email: user.email!,
+        displayName: _nameController.text,
+        dateOfBirth: _selectedDate!,
+        gender: _selectedGender,
+        height: double.parse(_heightController.text),
+        weight: double.parse(_weightController.text),
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      await context.read<FirebaseService>().createUserProfile(profile);
+      _showSnackBar('Profile created successfully!');
+
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const AuthGate()),
+        );
+      }
+    } catch (e) {
+      _showSnackBar('Failed to save profile: $e', isError: true);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Widget _buildDatePicker() {
+    return InkWell(
+      onTap: () async {
+        final DateTime? picked = await showDatePicker(
+          context: context,
+          initialDate: _selectedDate ?? DateTime.now(),
+          firstDate: DateTime(1920),
+          lastDate: DateTime.now(),
+        );
+        if (picked != null && picked != _selectedDate) {
+          setState(() {
+            _selectedDate = picked;
+          });
+        }
+      },
+      child: InputDecorator(
+        decoration: const InputDecoration(
+          labelText: 'Date of Birth',
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            Text(
+              _selectedDate != null ? DateFormat.yMMMd().format(_selectedDate!) : 'Select Date',
+            ),
+            const Icon(Icons.calendar_today),
+          ],
         ),
       ),
     );

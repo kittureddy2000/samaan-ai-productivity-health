@@ -93,7 +93,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to load profile: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
@@ -124,7 +124,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text('Please select your date of birth'),
           backgroundColor: Colors.orange,
         ),
@@ -157,7 +157,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text('Profile updated successfully!'),
             backgroundColor: Colors.green,
           ),
@@ -168,7 +168,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to update profile: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
@@ -225,10 +225,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text('All data deleted successfully! Please restart the app.'),
             backgroundColor: Colors.green,
-            duration: Duration(seconds: 3),
+            duration: const Duration(seconds: 3),
           ),
         );
         
@@ -240,7 +240,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to delete data: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
@@ -352,7 +352,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         // Profile Avatar
         CircleAvatar(
           radius: 60,
-          backgroundColor: Colors.blue.shade100,
+          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
           child: _buildProfileImage(user),
         ),
         const SizedBox(height: 24),
@@ -368,7 +368,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Text(
           profile.email,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Colors.grey[600],
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
         const SizedBox(height: 32),
@@ -385,14 +385,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 await NotificationService.instance.scheduleDailyMorning(hour: 8, minute: 0);
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Daily reminder scheduled')),
+                    SnackBar(content: Text('Daily reminder scheduled')),
                   );
                 }
               } else {
                 await NotificationService.instance.cancelDailyMorning();
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Daily reminder canceled')),
+                    SnackBar(content: Text('Daily reminder canceled')),
                   );
                 }
               }
@@ -423,20 +423,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
           builder: (context, snapshot) {
             if (snapshot.hasData) {
               return Card(
-                color: Colors.blue.shade50,
+                color: Theme.of(context).colorScheme.primaryContainer,
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.local_fire_department, color: Colors.blue.shade600),
+                          Icon(Icons.local_fire_department, color: Theme.of(context).colorScheme.primary),
                           const SizedBox(width: 8),
                           Text(
                             'Basal Metabolic Rate (BMR)',
                             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
-                              color: Colors.blue.shade600,
+                              color: Theme.of(context).colorScheme.primary,
                             ),
                           ),
                         ],
@@ -446,14 +446,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         '${snapshot.data!.round()} calories/day',
                         style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: Colors.blue.shade600,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         'This is the number of calories your body burns at rest',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[600],
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -490,7 +490,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             return Icon(
               Icons.person,
               size: 60,
-              color: Colors.blue.shade400,
+              color: Theme.of(context).colorScheme.primary,
             );
           },
           loadingBuilder: (context, child, loadingProgress) {
@@ -510,7 +510,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return Icon(
         Icons.person,
         size: 60,
-        color: Colors.blue.shade400,
+        color: Theme.of(context).colorScheme.primary,
       );
     }
   }
@@ -518,17 +518,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildDetailCard(String title, String value, IconData icon) {
     return Card(
       child: ListTile(
-        leading: Icon(icon, color: Colors.blue.shade400),
+        leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
         title: Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.w500,
-            color: Colors.grey,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
         subtitle: Text(
           value,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
@@ -557,11 +557,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           TextFormField(
             controller: _heightController,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Height (cm)',
-              prefixIcon: Icon(Icons.height),
-              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.height, color: Theme.of(context).colorScheme.onSurfaceVariant),
+              border: const OutlineInputBorder(),
               suffixText: 'cm',
+              suffixStyle: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -580,11 +581,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           TextFormField(
             controller: _weightController,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Weight (lbs)',
-              prefixIcon: Icon(Icons.monitor_weight),
-              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.monitor_weight, color: Theme.of(context).colorScheme.onSurfaceVariant),
+              border: const OutlineInputBorder(),
               suffixText: 'lbs',
+              suffixStyle: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -602,28 +604,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
           // Date of Birth Field
           InkWell(
             onTap: _selectDate,
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey),
-                borderRadius: BorderRadius.circular(4),
+            child: InputDecorator(
+              decoration: InputDecoration(
+                labelText: 'Date of Birth',
+                border: const OutlineInputBorder(),
               ),
               child: Row(
-                children: [
-                  const Icon(Icons.calendar_today, color: Colors.grey),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      _selectedDate == null
-                          ? 'Select Date of Birth'
-                          : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: _selectedDate == null ? Colors.grey : Colors.black,
-                      ),
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Text(
+                    _selectedDate == null
+                        ? 'Select Date of Birth'
+                        : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: _selectedDate == null ? Theme.of(context).colorScheme.onSurfaceVariant : Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
-                  const Icon(Icons.arrow_drop_down, color: Colors.grey),
+                  Icon(Icons.arrow_drop_down, color: Theme.of(context).colorScheme.onSurfaceVariant),
                 ],
               ),
             ),

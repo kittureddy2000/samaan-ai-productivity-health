@@ -117,13 +117,13 @@ class MainDashboardScreen extends StatelessWidget {
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
                 children: [
-                  // Fitness Tracker Tile (Active)
+                  // Fitness Tracker Tile (Active) - Now with beautiful dashboard
                   _buildDashboardTile(
                     context: context,
                     title: 'Fitness Tracker',
                     subtitle: 'Track calories, exercise & weight',
                     icon: Icons.fitness_center,
-                    color: const Color(0xFF1565C0), // Deep Blue
+                    color: const Color(0xFF1565C0),
                     isActive: true,
                     onTap: () {
                       Navigator.push(
@@ -141,7 +141,7 @@ class MainDashboardScreen extends StatelessWidget {
                     title: 'Task Manager',
                     subtitle: 'Organize and track your tasks',
                     icon: Icons.task_alt,
-                    color: const Color(0xFF1976D2), // Medium Blue
+                    color: const Color(0xFF1976D2),
                     isActive: false,
                   ),
                   
@@ -151,7 +151,7 @@ class MainDashboardScreen extends StatelessWidget {
                     title: 'Study Planner',
                     subtitle: 'Plan your learning schedule',
                     icon: Icons.school,
-                    color: const Color(0xFF1E88E5), // Light Blue
+                    color: const Color(0xFF1E88E5),
                     isActive: false,
                   ),
                   
@@ -161,7 +161,7 @@ class MainDashboardScreen extends StatelessWidget {
                     title: 'Habit Tracker',
                     subtitle: 'Build positive daily habits',
                     icon: Icons.refresh,
-                    color: const Color(0xFF2196F3), // Sky Blue
+                    color: const Color(0xFF2196F3),
                     isActive: false,
                   ),
                 ],

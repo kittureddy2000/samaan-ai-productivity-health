@@ -60,34 +60,154 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _navigateToPreviousDay() {
-    final previousDay = _selectedDate.subtract(const Duration(days: 1));
-    // Don't allow going beyond 365 days ago
-    final earliestDate = DateTime.now().subtract(const Duration(days: 365));
-    if (previousDay.isAfter(earliestDate) || previousDay.isAtSameMomentAs(earliestDate)) {
-      setState(() {
-        _selectedDate = previousDay;
-      });
-      _loadTodaySummary();
-    }
+    setState(() {
+      _selectedDate = _selectedDate.subtract(const Duration(days: 1));
+    });
+    _loadTodaySummary();
   }
 
   void _navigateToNextDay() {
-    final nextDay = _selectedDate.add(const Duration(days: 1));
-    final today = DateTime.now();
-    // Don't allow going beyond today
-    if (nextDay.isBefore(today) || nextDay.isAtSameMomentAs(today)) {
-      setState(() {
-        _selectedDate = nextDay;
-      });
-      _loadTodaySummary();
-    }
+    setState(() {
+      _selectedDate = _selectedDate.add(const Duration(days: 1));
+    });
+    _loadTodaySummary();
   }
 
   bool _isToday() {
-    final today = DateTime.now();
-    return _selectedDate.year == today.year &&
-           _selectedDate.month == today.month &&
-           _selectedDate.day == today.day;
+    final now = DateTime.now();
+    return _selectedDate.year == now.year &&
+           _selectedDate.month == now.month &&
+           _selectedDate.day == now.day;
+  }
+
+  Widget _buildDateNavigation() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.chevron_left),
+            onPressed: _navigateToPreviousDay,
+          ),
+          Text(
+            DateFormat('EEEE, MMMM d').format(_selectedDate),
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.chevron_right),
+            onPressed: _isToday() ? null : _navigateToNextDay,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryGrid(double bmr, double caloriesConsumed, double caloriesBurned, double netDeficit) {
+    final List<Map<String, dynamic>> summaryItems = [
+      {
+        'title': 'BMR',
+        'value': '${bmr.round()}',
+        'unit': 'kcal',
+        'color': const Color(0xFF3B82F6),
+        'icon': Icons.local_fire_department,
+      },
+      {
+        'title': 'Net Deficit',
+        'value': '${netDeficit.round()}',
+        'unit': 'kcal',
+        'color': netDeficit >= 0 ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+        'icon': Icons.trending_up,
+      },
+      {
+        'title': 'Consumed',
+        'value': '${caloriesConsumed.round()}',
+        'unit': 'kcal',
+        'color': const Color(0xFFF59E0B),
+        'icon': Icons.restaurant,
+      },
+      {
+        'title': 'Burned',
+        'value': '${caloriesBurned.round()}',
+        'unit': 'kcal',
+        'color': const Color(0xFF8B5CF6),
+        'icon': Icons.fitness_center,
+      },
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: constraints.maxWidth > 800 ? 400 : 350,
+            childAspectRatio: 1.5,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
+          ),
+          itemCount: summaryItems.length,
+          itemBuilder: (context, index) {
+            final item = summaryItems[index];
+            return _buildCompactSummaryCard(
+              item['title'],
+              item['value'],
+              item['unit'],
+              item['color'],
+              item['icon'],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildCompactSummaryCard(
+    String title,
+    String value,
+    String unit,
+    Color color,
+    IconData icon,
+  ) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: color, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            RichText(
+              text: TextSpan(
+                style: Theme.of(context).textTheme.bodyLarge,
+                children: [
+                  TextSpan(
+                    text: value,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: color,
+                        ),
+                  ),
+                  TextSpan(text: ' $unit'),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildDashboardContent() {
@@ -108,414 +228,202 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final weight = _todaySummary!['weight'];
     final foodEntries = _todaySummary!['foodEntries'] as List<FoodEntry>;
     final exerciseEntries = _todaySummary!['exerciseEntries'] as List<ExerciseEntry>;
-    final weightLossGoal = _todaySummary!['weightLossGoal'] as WeightLossGoal?;
-    final targetDailyCalories = _todaySummary!['targetDailyCalories'] as double?;
 
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Theme.of(context).colorScheme.primary.withOpacity(0.02),
-            Theme.of(context).colorScheme.surface,
+    return RefreshIndicator(
+      onRefresh: _loadTodaySummary,
+      child: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          _buildDateNavigation(),
+          const SizedBox(height: 16),
+          _buildSummaryGrid(bmr, caloriesConsumed, caloriesBurned, netDeficit),
+          const SizedBox(height: 16),
+          if (weight != null) ...[
+            _buildWeightCard(weight),
+            const SizedBox(height: 16),
           ],
-        ),
-      ),
-      child: RefreshIndicator(
-        onRefresh: _loadTodaySummary,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Welcome Message
-              Text(
-                'Welcome back!',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              
-              // Date Navigation
-              Row(
-              children: [
-                // Previous day button
-                IconButton(
-                  onPressed: () {
-                    final earliestDate = DateTime.now().subtract(const Duration(days: 365));
-                    final previousDay = _selectedDate.subtract(const Duration(days: 1));
-                    if (previousDay.isAfter(earliestDate) || previousDay.isAtSameMomentAs(earliestDate)) {
-                      _navigateToPreviousDay();
-                    }
-                  },
-                  icon: Icon(
-                    Icons.chevron_left,
-                    size: 28,
-                    color: () {
-                      final earliestDate = DateTime.now().subtract(const Duration(days: 365));
-                      final previousDay = _selectedDate.subtract(const Duration(days: 1));
-                      return (previousDay.isAfter(earliestDate) || previousDay.isAtSameMomentAs(earliestDate)) 
-                          ? Colors.blue 
-                          : Colors.grey;
-                    }(),
+          _buildQuickActionsSection(),
+          if (foodEntries.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            _buildEntriesSection(
+              _isToday() ? 'Today\'s Food' : 'Food Entries',
+              Icons.restaurant,
+              foodEntries.map((entry) => '${entry.name} - ${entry.calories.round()} kcal').toList(),
+            ),
+          ],
+          if (exerciseEntries.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            _buildEntriesSection(
+              _isToday() ? 'Today\'s Exercise' : 'Exercise Entries',
+              Icons.fitness_center,
+              exerciseEntries
+                  .map((entry) =>
+                      '${entry.name} - ${entry.caloriesBurned.round()} kcal (${entry.durationMinutes} min)')
+                  .toList(),
+            ),
+          ],
+          if (foodEntries.isEmpty && exerciseEntries.isEmpty) ...[
+            const SizedBox(height: 20),
+            Center(
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.timeline,
+                    size: 48,
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                   ),
-                  tooltip: 'Previous day',
-                ),
-                
-                // Date display
-                Expanded(
-                  child: Text(
-                    DateFormat('EEEE, MMMM d, y').format(_selectedDate),
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w500,
-                    ),
+                  const SizedBox(height: 12),
+                  Text(
+                    _isToday() ? 'No entries today' : 'No entries for this date',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _isToday()
+                        ? 'Start logging your food and exercise'
+                        : 'No data found for ${DateFormat('MMM d, yyyy').format(_selectedDate)}',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                     textAlign: TextAlign.center,
                   ),
-                ),
-                
-                // Next day button
-                IconButton(
-                  onPressed: () {
-                    final today = DateTime.now();
-                    final nextDay = _selectedDate.add(const Duration(days: 1));
-                    if (nextDay.isBefore(today) || nextDay.isAtSameMomentAs(today)) {
-                      _navigateToNextDay();
-                    }
-                  },
-                  icon: Icon(
-                    Icons.chevron_right,
-                    size: 28,
-                    color: () {
-                      final today = DateTime.now();
-                      final nextDay = _selectedDate.add(const Duration(days: 1));
-                      return (nextDay.isBefore(today) || nextDay.isAtSameMomentAs(today)) 
-                          ? Colors.blue 
-                          : Colors.grey;
-                    }(),
-                  ),
-                  tooltip: 'Next day',
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Summary Cards
-            Row(
-              children: [
-                Expanded(
-                  child: _buildSummaryCard(
-                    'BMR',
-                    '${bmr.round()}',
-                    'kcal',
-                    Colors.blue,
-                    Icons.local_fire_department,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildSummaryCard(
-                    'Net Deficit',
-                    '${netDeficit.round()}',
-                    'kcal',
-                    netDeficit >= 0 ? Colors.green : Colors.red,
-                    Icons.trending_up,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildSummaryCard(
-                    'Consumed',
-                    '${caloriesConsumed.round()}',
-                    'kcal',
-                    Colors.orange,
-                    Icons.restaurant,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildSummaryCard(
-                    'Burned',
-                    '${caloriesBurned.round()}',
-                    'kcal',
-                    Colors.purple,
-                    Icons.fitness_center,
-                  ),
-                ),
-              ],
-            ),
-
-            if (weight != null) ...[
-              const SizedBox(height: 12),
-              _buildSummaryCard(
-                'Current Weight',
-                '${weight.toStringAsFixed(1)}',
-                'lbs',
-                Colors.indigo,
-                Icons.monitor_weight,
-                fullWidth: true,
-              ),
-            ],
-
-
-            const SizedBox(height: 32),
-
-            // Quick Actions
-            const Text(
-              'Quick Actions',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+                ],
               ),
             ),
-            const SizedBox(height: 16),
-            
-            // Single Daily Log Button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const DailyLogScreen(),
-                    ),
-                  ).then((_) => _loadTodaySummary());
-                },
-                icon: const Icon(Icons.edit_calendar),
-                label: const Text('Daily Log Entry'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
+          ],
+          const SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWeightCard(double weight) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Row(
+          children: [
+            Icon(
+              Icons.monitor_weight,
+              color: Theme.of(context).colorScheme.primary,
+              size: 28,
             ),
-            const SizedBox(height: 12),
-            
-            // Reports Button
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const ReportsScreen(),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.analytics),
-                label: const Text('View Reports'),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Current Weight',
+                    style: Theme.of(context).textTheme.bodyMedium,
                   ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            
-            // Weight Loss Goal Button
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const WeightLossGoalScreen(),
-                    ),
-                  ).then((_) => _loadTodaySummary());
-                },
-                icon: const Icon(Icons.flag),
-                label: Text(weightLossGoal != null ? 'Update Goal' : 'Set Weight Loss Goal'),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 32),
-
-            // Selected Date's Entries
-            if (foodEntries.isNotEmpty) ...[
-              _buildEntriesSection(
-                _isToday() ? 'Today\'s Food' : 'Food Entries',
-                Icons.restaurant,
-                foodEntries.map((entry) => 
-                  '${entry.name} - ${entry.calories.round()} kcal'
-                ).toList(),
-              ),
-              const SizedBox(height: 16),
-            ],
-
-            if (exerciseEntries.isNotEmpty) ...[
-              _buildEntriesSection(
-                _isToday() ? 'Today\'s Exercise' : 'Exercise Entries',
-                Icons.fitness_center,
-                exerciseEntries.map((entry) => 
-                  '${entry.name} - ${entry.caloriesBurned.round()} kcal (${entry.durationMinutes} min)'
-                ).toList(),
-              ),
-              const SizedBox(height: 16),
-            ],
-
-            // If no entries today
-            if (foodEntries.isEmpty && exerciseEntries.isEmpty) ...[
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.timeline,
-                        size: 48,
-                        color: Colors.grey[400],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        _isToday() ? 'No entries today' : 'No entries for this date',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _isToday() 
-                            ? 'Start logging your food and exercise to track your progress'
-                            : 'No food or exercise entries found for ${DateFormat('MMM d, yyyy').format(_selectedDate)}',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey[600],
+                  const SizedBox(height: 4),
+                  RichText(
+                    text: TextSpan(
+                      style: Theme.of(context).textTheme.bodyLarge,
+                      children: [
+                        TextSpan(
+                          text: weight.toStringAsFixed(1),
+                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+                        const TextSpan(text: ' lbs'),
+                      ],
+                    ),
                   ),
-                ),
+                ],
               ),
-            ],
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildSummaryCard(
-    String title,
-    String value,
-    String unit,
-    Color color,
-    IconData icon, {
-    bool fullWidth = false,
-  }) {
+  Widget _buildQuickActionsSection() {
     return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.white,
-              color.withOpacity(0.03),
-            ],
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: color.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Icon(icon, color: color, size: 16),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              RichText(
-                text: TextSpan(
-                  children: [
-                    TextSpan(
-                      text: value,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: color,
-                        fontSize: fullWidth ? 24 : 20,
-                      ),
-                    ),
-                    TextSpan(
-                      text: ' $unit',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Quick Actions',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 12),
+            _buildActionButton(
+              'Daily Log Entry',
+              'Track your food, exercise, and weight',
+              Icons.edit_calendar,
+              () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const DailyLogScreen()),
+                ).then((_) => _loadTodaySummary());
+              },
+            ),
+            const Divider(height: 1),
+            _buildActionButton(
+              'View Reports',
+              'Analyze your progress and trends',
+              Icons.analytics,
+              () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ReportsScreen()),
+                );
+              },
+            ),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildActionButton(
-    String label,
+    String title,
+    String subtitle,
     IconData icon,
-    Color color,
     VoidCallback onTap,
   ) {
-    return Card(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              Icon(icon, color: color, size: 32),
-              const SizedBox(height: 8),
-              Text(
-                label,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
-                textAlign: TextAlign.center,
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12.0),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ],
         ),
       ),
     );
@@ -524,213 +432,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildEntriesSection(String title, IconData icon, List<String> entries) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(icon, size: 20),
+                Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
                 const SizedBox(width: 8),
                 Text(
                   title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(context).textTheme.titleMedium,
                 ),
               ],
             ),
             const SizedBox(height: 12),
             ...entries.take(3).map((entry) => Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Text(
-                '• $entry',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-            )),
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text('• $entry', style: Theme.of(context).textTheme.bodyMedium),
+                )),
             if (entries.length > 3)
               Text(
                 'and ${entries.length - 3} more...',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[600],
-                ),
+                style: Theme.of(context).textTheme.bodySmall,
               ),
           ],
-        ),
-      ),
-    );
-  }
-
-  void _navigateToLogFood() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const LogFoodScreen()),
-    );
-    if (result == true) {
-      _loadTodaySummary();
-    }
-  }
-
-  void _navigateToLogExercise() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const LogExerciseScreen()),
-    );
-    if (result == true) {
-      _loadTodaySummary();
-    }
-  }
-
-  void _navigateToLogWeight() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const LogWeightScreen()),
-    );
-    if (result == true) {
-      _loadTodaySummary();
-    }
-  }
-
-  Widget _buildGoalProgressCard(WeightLossGoal goal, double targetCalories, double consumedCalories) {
-    final remainingCalories = targetCalories - consumedCalories;
-    final progressPercentage = (consumedCalories / targetCalories * 100).clamp(0, 100);
-    
-    return Card(
-      elevation: 4,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.purple.shade50,
-              Colors.indigo.shade50,
-            ],
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.purple.shade100,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(Icons.flag, color: Colors.purple.shade700, size: 20),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    'Weight Loss Goal',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.purple.shade800,
-                    ),
-                  ),
-                ],
-              ),
-            const SizedBox(height: 12),
-            
-            // Goal summary
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.7),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                'Target: ${goal.targetWeight.toStringAsFixed(1)} lbs (-${goal.weightLossPerWeek.toStringAsFixed(1)} lbs/week)',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: Colors.purple.shade800,
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            
-            // Calorie targets
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Target Calories',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                    Text(
-                      '${targetCalories.round()} cal',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: Colors.indigo.shade700,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      'Remaining',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                    Text(
-                      '${remainingCalories.round()} cal',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: remainingCalories > 0 ? Colors.orange.shade700 : Colors.red.shade700,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            
-            // Progress bar
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.purple.withOpacity(0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: LinearProgressIndicator(
-                  value: progressPercentage / 100,
-                  backgroundColor: Colors.grey.withOpacity(0.2),
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    progressPercentage <= 100 ? Colors.indigo.shade600 : Colors.orange.shade600,
-                  ),
-                  minHeight: 8,
-                ),
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              '${progressPercentage.round()}% of daily target',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.purple.shade600,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            ],
-          ),
         ),
       ),
     );
@@ -739,22 +465,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final List<Widget> pages = [
-      _buildDashboardContent(),
+      Scaffold(
+        appBar: AppBar(
+          title: const Text('Fitness Tracker'),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.pop(context),
+          ),
+          actions: const [
+            ProfileMenuWidget(),
+          ],
+        ),
+        body: _buildDashboardContent(),
+      ),
       const ReportsScreen(),
     ];
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_selectedIndex == 0 ? 'Fitness Tracker' : 'Reports'),
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        foregroundColor: Theme.of(context).colorScheme.onSurface,
-        elevation: 0,
-        surfaceTintColor: Theme.of(context).colorScheme.surfaceTint,
-        actions: [
-          // Profile icon with dropdown
-          const ProfileMenuWidget(),
-        ],
-      ),
       body: IndexedStack(
         index: _selectedIndex,
         children: pages,
@@ -766,6 +493,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _selectedIndex = index;
           });
         },
+        type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.dashboard),
@@ -779,4 +507,4 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-} 
+}

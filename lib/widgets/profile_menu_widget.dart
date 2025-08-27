@@ -35,7 +35,7 @@ class ProfileMenuWidget extends StatelessWidget {
                   width: 60,
                   height: 60,
                   decoration: BoxDecoration(
-                    color: photoURL != null ? Colors.transparent : Colors.blue.withOpacity(0.1),
+                    color: photoURL != null ? Colors.transparent : Theme.of(context).colorScheme.primaryContainer,
                     shape: BoxShape.circle,
                   ),
                   child: photoURL != null && photoURL.isNotEmpty
@@ -86,8 +86,8 @@ class ProfileMenuWidget extends StatelessWidget {
             ),
             const Divider(),
             ListTile(
-              leading: const Icon(Icons.logout, color: Colors.red),
-              title: const Text('Sign Out', style: TextStyle(color: Colors.red)),
+              leading: Icon(Icons.logout, color: Theme.of(context).colorScheme.error),
+              title: Text('Sign Out', style: TextStyle(color: Theme.of(context).colorScheme.error)),
               onTap: () {
                 Navigator.pop(context);
                 context.read<AuthService>().signOut();
@@ -116,34 +116,51 @@ class ProfileMenuWidget extends StatelessWidget {
             final profile = snapshot.data;
             final photoURL = user?.photoURL ?? profile?.photoURL;
             
-            return Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: photoURL != null ? Colors.transparent : Colors.blue.withOpacity(0.1),
-                shape: BoxShape.circle,
+            return PopupMenuButton<String>(
+              onSelected: (value) {
+                switch (value) {
+                  case 'profile':
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                    );
+                    break;
+                  case 'signOut':
+                    context.read<AuthService>().signOut();
+                    break;
+                }
+              },
+              itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                const PopupMenuItem<String>(
+                  value: 'profile',
+                  child: ListTile(
+                    leading: Icon(Icons.person),
+                    title: Text('My Profile'),
+                  ),
+                ),
+                const PopupMenuDivider(),
+                PopupMenuItem<String>(
+                  value: 'signOut',
+                  child: ListTile(
+                    leading: Icon(Icons.logout, color: Theme.of(context).colorScheme.error),
+                    title: Text('Sign Out', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                  ),
+                ),
+              ],
+              child: CircleAvatar(
+                radius: 20,
+                backgroundImage: photoURL != null ? NetworkImage(photoURL) : null,
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                child: photoURL == null
+                    ? Text(
+                        user?.email?.substring(0, 1).toUpperCase() ?? 'U',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.onPrimaryContainer,
+                        ),
+                      )
+                    : null,
               ),
-              child: photoURL != null && photoURL.isNotEmpty
-                  ? ClipOval(
-                      child: Image.network(
-                        photoURL,
-                        width: 40,
-                        height: 40,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Icon(
-                            Icons.person,
-                            color: Colors.blue,
-                            size: 24,
-                          );
-                        },
-                      ),
-                    )
-                  : const Icon(
-                      Icons.person,
-                      color: Colors.blue,
-                      size: 24,
-                    ),
             );
           },
         ),

@@ -43,6 +43,14 @@ jobs:
     - name: Run tests
       run: flutter test
       
+    - name: Configure Firebase Options for Staging
+      run: |
+        sed -i "s/apiKey: '.*'/apiKey: '${{ secrets.FIREBASE_API_KEY_STAGING }}'/g" lib/firebase_options.dart
+        sed -i "s/appId: '1:[0-9]*:web:[a-zA-Z0-9]*'/appId: '${{ secrets.FIREBASE_APP_ID_WEB_STAGING }}'/g" lib/firebase_options.dart
+        sed -i "s/appId: 'YOUR_ANDROID_APP_ID_HERE'/appId: '${{ secrets.FIREBASE_APP_ID_ANDROID_STAGING }}'/g" lib/firebase_options.dart
+        sed -i "s/appId: 'YOUR_IOS_APP_ID_HERE'/appId: '${{ secrets.FIREBASE_APP_ID_IOS_STAGING }}'/g" lib/firebase_options.dart
+        echo "✅ Replaced placeholders in firebase_options.dart with staging secrets"
+        
     - name: Replace Firebase configuration in web template
       run: |
         sed -i 's/{{GOOGLE_CLIENT_ID}}/${{ secrets.GOOGLE_CLIENT_ID_STAGING }}/g' web/index.html
@@ -58,8 +66,7 @@ jobs:
     - name: Build Flutter Web (Staging)
       run: |
         flutter build web --release \
-          --dart-define=ENVIRONMENT=staging \
-          --dart-define=GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID_STAGING }}
+          --dart-define=ENVIRONMENT=staging
       
     - name: Setup Firebase Service Account
       run: |

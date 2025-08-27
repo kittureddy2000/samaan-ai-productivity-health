@@ -159,7 +159,7 @@ class _WeightLossGoalScreenState extends State<WeightLossGoalScreen> {
                     Icon(
                       Icons.flag,
                       size: 48,
-                      color: Colors.blue,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                     const SizedBox(height: 12),
                     Text(
@@ -192,7 +192,7 @@ class _WeightLossGoalScreenState extends State<WeightLossGoalScreen> {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.monitor_weight, color: Colors.blue),
+                        Icon(Icons.monitor_weight, color: Theme.of(context).colorScheme.primary),
                         const SizedBox(width: 8),
                         Text(
                           'Current Weight',
@@ -206,9 +206,9 @@ class _WeightLossGoalScreenState extends State<WeightLossGoalScreen> {
                     TextFormField(
                       controller: _currentWeightController,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Current Weight (lbs)',
-                        border: OutlineInputBorder(),
+                        border: const OutlineInputBorder(),
                         suffixText: 'lbs',
                       ),
                       validator: (value) {
@@ -237,7 +237,7 @@ class _WeightLossGoalScreenState extends State<WeightLossGoalScreen> {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.track_changes, color: Colors.green),
+                        Icon(Icons.track_changes, color: Theme.of(context).colorScheme.secondary),
                         const SizedBox(width: 8),
                         Text(
                           'Target Weight',
@@ -251,9 +251,9 @@ class _WeightLossGoalScreenState extends State<WeightLossGoalScreen> {
                     TextFormField(
                       controller: _targetWeightController,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Target Weight (lbs)',
-                        border: OutlineInputBorder(),
+                        border: const OutlineInputBorder(),
                         suffixText: 'lbs',
                       ),
                       validator: (value) {
@@ -289,7 +289,7 @@ class _WeightLossGoalScreenState extends State<WeightLossGoalScreen> {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.speed, color: Colors.orange),
+                        Icon(Icons.speed, color: Theme.of(context).colorScheme.tertiary),
                         const SizedBox(width: 8),
                         Text(
                           'Weight Loss Rate',
@@ -304,7 +304,7 @@ class _WeightLossGoalScreenState extends State<WeightLossGoalScreen> {
                       '${_weightLossPerWeek.toStringAsFixed(1)} lbs per week',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: Colors.orange,
+                        color: Theme.of(context).colorScheme.tertiary,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -334,7 +334,7 @@ class _WeightLossGoalScreenState extends State<WeightLossGoalScreen> {
 
             // Calorie Calculation Summary
             Card(
-              color: Colors.blue.withOpacity(0.1),
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -342,7 +342,7 @@ class _WeightLossGoalScreenState extends State<WeightLossGoalScreen> {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.calculate, color: Colors.blue),
+                        Icon(Icons.calculate, color: Theme.of(context).colorScheme.primary),
                         const SizedBox(width: 8),
                         Text(
                           'Daily Calorie Plan',
@@ -357,13 +357,13 @@ class _WeightLossGoalScreenState extends State<WeightLossGoalScreen> {
                     _buildCalorieSummaryRow(
                       'Your BMR (Base Metabolic Rate)',
                       '${_estimatedBMR.round()} cal',
-                      Colors.blue,
+                      Theme.of(context).colorScheme.primary,
                     ),
                     const SizedBox(height: 8),
                     _buildCalorieSummaryRow(
                       'Daily Calorie Deficit Needed',
                       '${_dailyCalorieDeficit.round()} cal',
-                      Colors.red,
+                      Theme.of(context).colorScheme.error,
                     ),
                     const SizedBox(height: 8),
                     const Divider(),
@@ -379,13 +379,13 @@ class _WeightLossGoalScreenState extends State<WeightLossGoalScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.amber.withOpacity(0.2),
+                        color: Colors.orange.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.amber),
+                        border: Border.all(color: Colors.orange),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.lightbulb, color: Colors.amber, size: 20),
+                          Icon(Icons.lightbulb, color: Colors.orange, size: 20),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
@@ -411,7 +411,7 @@ class _WeightLossGoalScreenState extends State<WeightLossGoalScreen> {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.calendar_today, color: Colors.purple),
+                        Icon(Icons.calendar_today, color: Theme.of(context).colorScheme.secondary),
                         const SizedBox(width: 8),
                         Text(
                           'Start Date',

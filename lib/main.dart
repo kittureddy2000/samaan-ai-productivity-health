@@ -1,47 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
-import 'screens/auth_gate.dart';
-import 'services/auth_service.dart';
-import 'services/firebase_service.dart';
-import 'config/firebase_config.dart';
-import 'theme/app_theme.dart';
-import 'services/notification_service.dart';
+import 'package:samaanai_fitness_tracker/firebase_options.dart';
+import 'package:samaanai_fitness_tracker/screens/auth_gate.dart';
+import 'package:samaanai_fitness_tracker/services/auth_service.dart';
+import 'package:samaanai_fitness_tracker/services/firebase_service.dart';
+import 'package:samaanai_fitness_tracker/theme/app_theme.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:http/http.dart' as http;
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Disable Provider debug check for production
-  Provider.debugCheckInvalidValueType = null;
-  
-  try {
-    await Firebase.initializeApp(
-      options: FirebaseConfig.currentPlatform,
-    );
-    print('Firebase initialized successfully');
-  } catch (e) {
-    print('Firebase initialization failed: $e');
-    // Continue with the app even if Firebase fails
-  }
-  // Initialize notifications (Android safe)
-  await NotificationService.instance.initialize();
-  await NotificationService.instance.scheduleDailyMorning(hour: 8, minute: 0);
-  
-  runApp(const SamaanAiApp());
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  runApp(const MyApp());
 }
 
-class SamaanAiApp extends StatelessWidget {
-  const SamaanAiApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthService()),
-        ChangeNotifierProvider(create: (_) => FirebaseService()),
+        ChangeNotifierProvider<AuthService>(
+          create: (_) => AuthService(auth: FirebaseAuth.instance),
+        ),
+        ChangeNotifierProvider<FirebaseService>(
+          create: (_) => FirebaseService(
+            auth: FirebaseAuth.instance,
+            firestore: FirebaseFirestore.instance,
+            httpClient: http.Client(),
+          ),
+        ),
       ],
       child: MaterialApp(
-        title: 'Samaan AI - Productivity & Health',
+        title: 'Samaan AI Fitness Tracker',
         theme: AppTheme.light(),
         darkTheme: AppTheme.dark(),
         themeMode: ThemeMode.system,

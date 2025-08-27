@@ -3,13 +3,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService extends ChangeNotifier {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    // For Android: clientId should be null to use google-services.json
-    // For Web: prefer build-time provided client ID; if null, the web plugin
-    // will attempt to read it from the meta tag in web/index.html
-    clientId: kIsWeb ? _getGoogleClientId() : null,
-  );
+  final FirebaseAuth _auth;
+  final GoogleSignIn _googleSignIn;
+
+  AuthService({required FirebaseAuth auth})
+      : _auth = auth,
+        _googleSignIn = GoogleSignIn(
+          clientId: kIsWeb ? _getGoogleClientId() : null,
+        );
 
   // Resolve Google Client ID for Web from build-time definitions; otherwise null
   static String? _getGoogleClientId() {
@@ -17,13 +18,18 @@ class AuthService extends ChangeNotifier {
       // For mobile platforms, return null to use the default configuration from google-services.json
       return null;
     }
-    // Prefer a build-time provided value (set via --dart-define=GOOGLE_CLIENT_ID=...)
-    const String fromDefine = String.fromEnvironment('GOOGLE_CLIENT_ID', defaultValue: '');
-    if (fromDefine.isNotEmpty) {
-      return fromDefine;
+    // For CI/CD, prefer a build-time provided value from GitHub Secrets.
+    const fromDefineCI = String.fromEnvironment('GOOGLE_CLIENT_ID', defaultValue: '');
+    if (fromDefineCI.isNotEmpty) {
+      return fromDefineCI;
     }
-    // Returning null allows the web plugin to read the client ID from the meta tag
-    // <meta name="google-signin-client_id" content="..."> in web/index.html
+    // For local development, use the STAGING_CLIENT_ID.
+    const fromDefineLocal = String.fromEnvironment('STAGING_CLIENT_ID', defaultValue: '');
+    if (fromDefineLocal.isNotEmpty) {
+      return fromDefineLocal;
+    }
+    // If no dart-define is provided, return null to let the google_sign_in plugin
+    // fall back to reading the <meta name="google-signin-client_id"> tag in web/index.html.
     return null;
   }
 
@@ -33,14 +39,6 @@ class AuthService extends ChangeNotifier {
 
   // Auth state changes stream
   Stream<User?> get authStateChanges => _auth.authStateChanges();
-
-  // Constructor
-  AuthService() {
-    // Listen to auth state changes
-    _auth.authStateChanges().listen((User? user) {
-      notifyListeners();
-    });
-  }
 
   // Sign in with email and password
   Future<UserCredential?> signInWithEmailAndPassword({
@@ -77,7 +75,7 @@ class AuthService extends ChangeNotifier {
   // Sign in with Google (with better error handling)
   Future<UserCredential?> signInWithGoogle() async {
     try {
-      // Clear any previous sign-in state for Android
+      // For mobile/desktop, clear any previous sign-in state
       if (!kIsWeb) {
         await _googleSignIn.signOut();
       }
@@ -187,7 +185,9 @@ class AuthService extends ChangeNotifier {
       case 'too-many-requests':
         return 'Too many attempts. Please try again later.';
       case 'operation-not-allowed':
-        return 'This operation is not allowed.';
+        return 'This sign-in method is not enabled in Firebase Console. '
+               'Please enable Email/Password or Google authentication in the Firebase Console.\n'
+               'Go to: Firebase Console > Authentication > Sign-in method > Enable Email/Password and Google.';
       default:
         return 'An error occurred. Please try again.';
     }
