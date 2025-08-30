@@ -53,16 +53,16 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDngmDDrO8GnMK898Ecy-eRiIFQc_YSs_I', // You need to replace this from the Android app config in Firebase
-    appId: '1:362525403590:android:3c8a94a5ceee9942e36ac7', // You need to replace this from the Android app config in Firebase
+    apiKey: 'YOUR_ANDROID_API_KEY_HERE', // You need to replace this from the Android app config in Firebase
+    appId: 'YOUR_ANDROID_APP_ID_HERE', // You need to replace this from the Android app config in Firebase
     messagingSenderId: '362525403590',
     projectId: 'samaan-ai-staging-2025',
     storageBucket: 'samaan-ai-staging-2025.appspot.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyCY0U8h9a9ff0GE9v9YGFxHBnBgl6q6OYs', // You need to replace this from the iOS app config in Firebase
-    appId: '1:362525403590:ios:3b6d788d12641e00e36ac7', // You need to replace this from the iOS app config in Firebase
+    apiKey: 'YOUR_IOS_API_KEY_HERE', // You need to replace this from the iOS app config in Firebase
+    appId: 'YOUR_IOS_APP_ID_HERE', // You need to replace this from the iOS app config in Firebase
     messagingSenderId: '362525403590',
     projectId: 'samaan-ai-staging-2025',
     storageBucket: 'samaan-ai-staging-2025.appspot.com',
