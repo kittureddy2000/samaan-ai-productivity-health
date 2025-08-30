@@ -50,20 +50,8 @@ jobs:
         sed -i "s/appId: '1:[0-9]*:web:[a-zA-Z0-9]*'/appId: '${{ secrets.FIREBASE_APP_ID_WEB_STAGING }}'/g" lib/firebase_options.dart
         
         # Derive Android values from the decoded google-services.json to ensure perfect match
-        ANDROID_APP_ID=$(python3 - <<'PY'
-import json
-with open('android/app/google-services.json') as f:
-    j=json.load(f)
-print(j['client'][0]['client_info']['mobilesdk_app_id'])
-PY
-)
-        ANDROID_API_KEY=$(python3 - <<'PY'
-import json
-with open('android/app/google-services.json') as f:
-    j=json.load(f)
-print(j['client'][0]['api_key'][0]['current_key'])
-PY
-)
+        ANDROID_APP_ID=$(python3 -c "import json,sys; j=json.load(open('android/app/google-services.json')); print(j['client'][0]['client_info']['mobilesdk_app_id'])")
+        ANDROID_API_KEY=$(python3 -c "import json,sys; j=json.load(open('android/app/google-services.json')); print(j['client'][0]['api_key'][0]['current_key'])")
         echo "Using Android APP_ID=$ANDROID_APP_ID"
         echo "Using Android API_KEY=${ANDROID_API_KEY:0:6}********"
         
