@@ -45,11 +45,33 @@ jobs:
       
     - name: Configure Firebase Options for Staging
       run: |
+        # Set web values from secrets
         sed -i "s/apiKey: '.*'/apiKey: '${{ secrets.FIREBASE_API_KEY_STAGING }}'/g" lib/firebase_options.dart
         sed -i "s/appId: '1:[0-9]*:web:[a-zA-Z0-9]*'/appId: '${{ secrets.FIREBASE_APP_ID_WEB_STAGING }}'/g" lib/firebase_options.dart
-        sed -i "s/appId: 'YOUR_ANDROID_APP_ID_HERE'/appId: '${{ secrets.FIREBASE_APP_ID_ANDROID_STAGING }}'/g" lib/firebase_options.dart
-        sed -i "s/appId: 'YOUR_IOS_APP_ID_HERE'/appId: '${{ secrets.FIREBASE_APP_ID_IOS_STAGING }}'/g" lib/firebase_options.dart
-        echo "✅ Replaced placeholders in firebase_options.dart with staging secrets"
+        
+        # Derive Android values from the decoded google-services.json to ensure perfect match
+        ANDROID_APP_ID=$(python3 - <<'PY'
+import json
+with open('android/app/google-services.json') as f:
+    j=json.load(f)
+print(j['client'][0]['client_info']['mobilesdk_app_id'])
+PY
+)
+        ANDROID_API_KEY=$(python3 - <<'PY'
+import json
+with open('android/app/google-services.json') as f:
+    j=json.load(f)
+print(j['client'][0]['api_key'][0]['current_key'])
+PY
+)
+        echo "Using Android APP_ID=$ANDROID_APP_ID"
+        echo "Using Android API_KEY=${ANDROID_API_KEY:0:6}********"
+        
+        # Replace only inside the android options block
+        sed -i "/static const FirebaseOptions android/,/);/ s/appId: '.*'/appId: '$ANDROID_APP_ID'/" lib/firebase_options.dart
+        sed -i "/static const FirebaseOptions android/,/);/ s/apiKey: '.*'/apiKey: '$ANDROID_API_KEY'/" lib/firebase_options.dart
+        
+        echo "✅ Replaced placeholders in firebase_options.dart with staging values (web from secrets, android from google-services.json)"
         
     - name: Replace Firebase configuration in web template
       run: |
