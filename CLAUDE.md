@@ -1,5 +1,7 @@
 # Claude Development Guide
 
+> For authoritative architectural and development policy, see `PROJECT_RULES.md`. If guidance here conflicts, follow `PROJECT_RULES.md`.
+
 This file contains instructions for Claude to help with development tasks.
 
 ## Local Development Setup
@@ -29,7 +31,7 @@ flutter run -d chrome \
   --web-port 5000 \
   --dart-define=ENVIRONMENT=staging \
   --dart-define=USE_FIREBASE_EMULATORS=false \
-  --dart-define=GOOGLE_CLIENT_ID=362525403590-rjc786764k0e5akfvpjujfe40ld8gccf.apps.googleusercontent.com
+  --dart-define=STAGING_CLIENT_ID=$STAGING_CLIENT_ID
 ```
 
 #### Run Tests
@@ -41,9 +43,9 @@ dart format .                   # Code formatting
 
 #### Build for Testing
 ```bash
+# In CI, do not pass client id via --dart-define. Inject into web/index.html via sed.
 flutter build web --release \
-  --dart-define=ENVIRONMENT=staging \
-  --dart-define=GOOGLE_CLIENT_ID=362525403590-rjc786764k0e5akfvpjujfe40ld8gccf.apps.googleusercontent.com
+  --dart-define=ENVIRONMENT=staging
 ```
 
 ## 🔐 OAuth Configuration
@@ -52,14 +54,29 @@ The staging Firebase project should have these OAuth origins configured:
 - `http://localhost:5000` (primary development port)
 
 **Google Client IDs:**
-- **Staging**: `362525403590-rjc786764k0e5akfvpjujfe40ld8gccf.apps.googleusercontent.com`
-- **Production**: Set via GitHub Actions secrets
+- **Staging**: Provided via `--dart-define=STAGING_CLIENT_ID` in local dev scripts
+- **Production**: Injected via CI by replacing `{{GOOGLE_CLIENT_ID}}` in `web/index.html`
 
 ## 🌐 Environments
 
 - **Local Development**: http://localhost:5000
 - **Staging**: https://samaan-ai-staging-2025.web.app
 - **Production**: https://samaan-ai-production-2025.web.app
+
+## 🔐 CI/CD Secrets Quick Reference
+
+Use GitHub Actions secrets only; never hardcode. Staging and production each have complete secret sets consumed by CI:
+
+- Android signing (release): `ANDROID_RELEASE_KEYSTORE` (base64), `ANDROID_RELEASE_KEYSTORE_PASSWORD`, `ANDROID_RELEASE_KEY_ALIAS`, `ANDROID_RELEASE_KEY_PASSWORD`
+- Debug signing (optional): `DEBUG_KEYSTORE` (base64) for consistent debug APKs
+- Firebase service files (Android): `GOOGLE_SERVICES_STAGING`, `GOOGLE_SERVICES_PROD` → decode to `android/app/google-services.json`
+- Google OAuth (Web): `GOOGLE_CLIENT_ID_STAGING` (local via `--dart-define`), `GOOGLE_CLIENT_ID_PRODUCTION` (CI injects into `web/index.html` placeholder)
+- Firebase config (per env):
+  - Staging: `FIREBASE_API_KEY_STAGING`, `FIREBASE_PROJECT_ID_STAGING`, `FIREBASE_APP_ID_STAGING`, `FIREBASE_APP_ID_ANDROID_STAGING`, `FIREBASE_AUTH_DOMAIN_STAGING`, `FIREBASE_STORAGE_BUCKET_STAGING`, `FIREBASE_MESSAGING_SENDER_ID_STAGING`, `FIREBASE_MEASUREMENT_ID_STAGING`
+  - Production: `FIREBASE_API_KEY_PRODUCTION`, `FIREBASE_PROJECT_ID_PRODUCTION`, `FIREBASE_APP_ID_WEB_PRODUCTION`, `FIREBASE_APP_ID_ANDROID_PRODUCTION`, `FIREBASE_AUTH_DOMAIN_PRODUCTION`, `FIREBASE_STORAGE_BUCKET_PRODUCTION`, `FIREBASE_MESSAGING_SENDER_ID_PRODUCTION`, `FIREBASE_MEASUREMENT_ID_PRODUCTION`
+- Deployment auth: `FIREBASE_TOKEN`, `GOOGLE_APPLICATION_CREDENTIALS_JSON` (if required)
+
+CI writes these into build artifacts and codegen where needed; see `PROJECT_RULES.md` §16 for file mappings.
 
 ## 📝 Development Workflow
 

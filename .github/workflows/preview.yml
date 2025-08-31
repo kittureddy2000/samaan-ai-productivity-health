@@ -42,6 +42,14 @@ jobs:
     - name: Install dependencies
       run: flutter pub get
       
+    - name: Format check
+      run: |
+        dart format --output=none --set-exit-if-changed .
+        
+    - name: Analyze
+      run: |
+        flutter analyze --no-pub
+      
     - name: Decode staging google-services.json for Android
       run: |
         echo "${{ secrets.GOOGLE_SERVICES_STAGING }}" | base64 -d > android/app/google-services.json

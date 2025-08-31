@@ -58,6 +58,7 @@ Test users: `john@test.com` / `jane@test.com` (password: `test123`)
 
 - **[DEVELOPER.md](./DEVELOPER.md)** - Development setup, architecture, and workflows
 - **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Production deployment and Play Store guide
+- **[PROJECT_RULES.md](./PROJECT_RULES.md)** - Authoritative architecture and development rules
 - **[privacy_policy.md](./privacy_policy.md)** - Application privacy policy
 
 ## 🎯 Status

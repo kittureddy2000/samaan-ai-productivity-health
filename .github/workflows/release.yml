@@ -42,6 +42,14 @@ jobs:
     - name: Install dependencies
       run: flutter pub get
       
+    - name: Format check
+      run: |
+        dart format --output=none --set-exit-if-changed .
+        
+    - name: Analyze
+      run: |
+        flutter analyze --no-pub
+      
     - name: Setup production google-services.json
       run: |
         echo "${{ secrets.GOOGLE_SERVICES_PROD }}" | base64 -d > android/app/google-services.json
@@ -57,11 +65,11 @@ jobs:
         
         # Create .android directory and decode the production keystore
         mkdir -p /home/runner/.config/.android/
-        echo "${{ secrets.PRODUCTION_KEYSTORE }}" | base64 -d > android/app/production-keystore.jks
+        echo "${{ secrets.ANDROID_RELEASE_KEYSTORE }}" | base64 -d > android/app/production-keystore.jks
         
         # Verify the keystore exists and get SHA-1
         echo "🔍 Verifying production keystore SHA-1..."
-        KEYSTORE_SHA1=$(keytool -list -v -keystore android/app/production-keystore.jks -alias production -storepass "${{ secrets.PRODUCTION_KEYSTORE_PASSWORD }}" -keypass "${{ secrets.PRODUCTION_KEY_PASSWORD }}" | grep "SHA1:" | sed 's/.*SHA1: //' | tr -d ' ')
+        KEYSTORE_SHA1=$(keytool -list -v -keystore android/app/production-keystore.jks -alias production -storepass "${{ secrets.ANDROID_RELEASE_KEYSTORE_PASSWORD }}" -keypass "${{ secrets.ANDROID_RELEASE_KEY_PASSWORD }}" | grep "SHA1:" | sed 's/.*SHA1: //' | tr -d ' ')
         echo "🔑 Production keystore SHA-1: $KEYSTORE_SHA1"
         
         # The SHA-1 should be different from staging to avoid conflicts
@@ -80,6 +88,14 @@ jobs:
           echo "✅ SUCCESS: Production SHA-1 is different from staging (no conflict)"
         fi
         
+        # Write key.properties for Gradle signing
+        cat > android/key.properties <<EOF
+        storePassword=${{ secrets.ANDROID_RELEASE_KEYSTORE_PASSWORD }}
+        keyPassword=${{ secrets.ANDROID_RELEASE_KEY_PASSWORD }}
+        keyAlias=${{ secrets.ANDROID_RELEASE_KEY_ALIAS }}
+        storeFile=production-keystore.jks
+        EOF
+        
     - name: Run tests
       run: flutter test
         
@@ -88,7 +104,6 @@ jobs:
         sed -i "s/apiKey: '.*'/apiKey: '${{ secrets.FIREBASE_API_KEY_PRODUCTION }}'/g" lib/firebase_options.dart
         sed -i "s/appId: '1:[0-9]*:web:[a-zA-Z0-9]*'/appId: '${{ secrets.FIREBASE_APP_ID_WEB_PRODUCTION }}'/g" lib/firebase_options.dart
         sed -i "s/appId: 'YOUR_ANDROID_APP_ID_HERE'/appId: '${{ secrets.FIREBASE_APP_ID_ANDROID_PRODUCTION }}'/g" lib/firebase_options.dart
-        sed -i "s/appId: 'YOUR_IOS_APP_ID_HERE'/appId: '${{ secrets.FIREBASE_APP_ID_IOS_PRODUCTION }}'/g" lib/firebase_options.dart
         echo "✅ Replaced placeholders in firebase_options.dart with production secrets"
         
     - name: Replace Firebase configuration in web template
@@ -99,7 +114,7 @@ jobs:
         sed -i 's/{{FIREBASE_AUTH_DOMAIN}}/${{ secrets.FIREBASE_AUTH_DOMAIN_PRODUCTION }}/g' web/index.html
         sed -i 's/{{FIREBASE_STORAGE_BUCKET}}/${{ secrets.FIREBASE_STORAGE_BUCKET_PRODUCTION }}/g' web/index.html
         sed -i 's/{{FIREBASE_MESSAGING_SENDER_ID}}/${{ secrets.FIREBASE_MESSAGING_SENDER_ID_PRODUCTION }}/g' web/index.html
-        sed -i 's/{{FIREBASE_APP_ID}}/${{ secrets.FIREBASE_APP_ID_PRODUCTION }}/g' web/index.html
+        sed -i 's/{{FIREBASE_APP_ID}}/${{ secrets.FIREBASE_APP_ID_WEB_PRODUCTION }}/g' web/index.html
         sed -i 's/{{FIREBASE_MEASUREMENT_ID}}/${{ secrets.FIREBASE_MEASUREMENT_ID_PRODUCTION }}/g' web/index.html
         echo "✅ Replaced all Firebase configuration placeholders in web/index.html"
         
@@ -121,11 +136,44 @@ jobs:
         firebase deploy --only hosting
         echo "✅ Production web deployed"
         
-    - name: Build Production APK (debug mode for OAuth compatibility)
-      run: flutter build apk --debug --flavor production --dart-define=ENVIRONMENT=production
+    - name: Build Production APK (release)
+      run: flutter build apk --release --flavor production --dart-define=ENVIRONMENT=production
       
-    - name: Build Production App Bundle (debug mode for OAuth compatibility)  
-      run: flutter build appbundle --debug --flavor production --dart-define=ENVIRONMENT=production
+    - name: Build Production App Bundle (release)
+      run: flutter build appbundle --release --flavor production --dart-define=ENVIRONMENT=production
+      
+    - name: Verify Gradle signing for productionRelease
+      run: |
+        echo "🔍 Verifying Gradle signingReport for productionRelease variant..."
+        cd android
+        ./gradlew tasks --all > /dev/null 2>&1 || true
+        ./gradlew signingReport | sed -n '/Variant: productionRelease/,$p' | sed -n '1,60p' | cat
+        SHA1=$(./gradlew signingReport | awk '/Variant: productionRelease/{f=1} f && /SHA1:/{print $2; exit}')
+        cd -
+        echo "Signing SHA1 (masked): ${SHA1:0:8}********"
+        if [ -z "$SHA1" ]; then
+          echo "❌ Could not read SHA1 for productionRelease variant" && exit 1
+        fi
+        echo "✅ Gradle signing report produced for productionRelease"
+
+    - name: Verify release artifacts exist
+      run: |
+        APK=build/app/outputs/flutter-apk/app-production-release.apk
+        AAB=build/app/outputs/bundle/productionRelease/app-production-release.aab
+        [ -f "$APK" ] || (echo "❌ Missing APK: $APK" && exit 1)
+        [ -f "$AAB" ] || (echo "❌ Missing AAB: $AAB" && exit 1)
+        ls -lh "$APK" || true
+        ls -lh "$AAB" || true
+        echo "✅ Release artifacts verified"
+    
+    - name: Generate SHA256 checksums
+      run: |
+        APK=build/app/outputs/flutter-apk/app-production-release.apk
+        AAB=build/app/outputs/bundle/productionRelease/app-production-release.aab
+        sha256sum "$APK" | tee "${APK}.sha256"
+        sha256sum "$AAB" | tee "${AAB}.sha256"
+        echo "APK SHA256:  $(cut -d' ' -f1 ${APK}.sha256)"
+        echo "AAB SHA256:  $(cut -d' ' -f1 ${AAB}.sha256)"
       
     - name: Upload Production Web artifact
       uses: actions/upload-artifact@v4
@@ -136,29 +184,51 @@ jobs:
     - name: Upload Production APK artifact
       uses: actions/upload-artifact@v4
       with:
-        name: production-debug-apk
-        path: build/app/outputs/flutter-apk/app-production-debug.apk
+        name: production-release-apk
+        path: |
+          build/app/outputs/flutter-apk/app-production-release.apk
+          build/app/outputs/flutter-apk/app-production-release.apk.sha256
         
     - name: Upload Production AAB artifact
       uses: actions/upload-artifact@v4
       with:
-        name: production-debug-aab
-        path: build/app/outputs/bundle/productionDebug/app-production-debug.aab
+        name: production-release-aab
+        path: |
+          build/app/outputs/bundle/productionRelease/app-production-release.aab
+          build/app/outputs/bundle/productionRelease/app-production-release.aab.sha256
+    
+    - name: Prepare release notes with checksums
+      id: notes
+      run: |
+        APK=build/app/outputs/flutter-apk/app-production-release.apk
+        AAB=build/app/outputs/bundle/productionRelease/app-production-release.aab
+        APK_SHA=$(cut -d' ' -f1 ${APK}.sha256)
+        AAB_SHA=$(cut -d' ' -f1 ${AAB}.sha256)
+        cat > RELEASE_NOTES.md <<EOF
+🚀 Production Release ${GITHUB_REF_NAME}
+
+SHA256 checksums:
+- APK: \
+\`${APK_SHA}\`
+- AAB: \
+\`${AAB_SHA}\`
+
+📱 Android APK (release): Download from assets below
+📦 Android AAB (release): For Play Store deployment
+🌐 Web: Deployed to https://samaan-ai-production-2025.web.app
+
+This release includes both web and Android builds.
+EOF
         
     - name: Create GitHub Release
       if: startsWith(github.ref, 'refs/tags/')
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          build/app/outputs/flutter-apk/app-production-debug.apk
-          build/app/outputs/bundle/productionDebug/app-production-debug.aab
-        body: |
-          🚀 **Production Release ${{ github.ref_name }}**
-          
-          📱 **Android APK**: Download from assets below
-          📦 **Android AAB**: For Play Store deployment
-          🌐 **Web**: Deployed to https://samaan-ai-production-2025.web.app
-          
-          This release includes both web and Android builds.
+          build/app/outputs/flutter-apk/app-production-release.apk
+          build/app/outputs/flutter-apk/app-production-release.apk.sha256
+          build/app/outputs/bundle/productionRelease/app-production-release.aab
+          build/app/outputs/bundle/productionRelease/app-production-release.aab.sha256
+        body_path: RELEASE_NOTES.md
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

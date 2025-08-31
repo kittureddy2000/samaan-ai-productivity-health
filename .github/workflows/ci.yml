@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Install dependencies
+        run: |
+          flutter pub get
+
+      - name: Verify PROJECT_RULES.md referenced by README
+        run: |
+          grep -q "PROJECT_RULES.md" README.md
+
+      - name: Enforce web client ID policy (placeholder present)
+        run: |
+          if grep -q "<meta name=\"google-signin-client_id\"" web/index.html; then
+            if ! grep -q "{{GOOGLE_CLIENT_ID}}" web/index.html; then
+              echo "web/index.html must contain {{GOOGLE_CLIENT_ID}} placeholder in CI" && exit 1
+            fi
+          fi
+
+      - name: Ensure android google-services.json is staging (heuristic)
+        run: |
+          if grep -q "project_id" android/app/google-services.json; then
+            if grep -qi "prod" android/app/google-services.json; then
+              echo "android/app/google-services.json appears to be production; staging should be committed" && exit 1
+            fi
+          fi
+
+      - name: Format check
+        run: |
+          dart format --output=none --set-exit-if-changed .
+
+      - name: Analyze
+        run: |
+          flutter analyze --no-pub
+
+      - name: Unit tests
+        run: |
+          flutter test
+
+      - name: Build web (staging defines only)
+        env:
+          ENVIRONMENT: staging
+        run: |
+          flutter build web --release --dart-define=ENVIRONMENT=staging
+
