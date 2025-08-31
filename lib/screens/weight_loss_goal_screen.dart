@@ -16,7 +16,7 @@ class _WeightLossGoalScreenState extends State<WeightLossGoalScreen> {
   final _formKey = GlobalKey<FormState>();
   final _targetWeightController = TextEditingController();
   final _currentWeightController = TextEditingController();
-  
+
   double _weightLossPerWeek = 1.0; // Default 1 lb per week
   DateTime _startDate = DateTime.now();
   bool _isLoading = false;
@@ -39,7 +39,8 @@ class _WeightLossGoalScreenState extends State<WeightLossGoalScreen> {
 
   Future<void> _loadExistingGoal() async {
     try {
-      final goal = await context.read<FirebaseService>().getActiveWeightLossGoal();
+      final goal =
+          await context.read<FirebaseService>().getActiveWeightLossGoal();
       if (goal != null) {
         setState(() {
           _existingGoal = goal;
@@ -58,7 +59,8 @@ class _WeightLossGoalScreenState extends State<WeightLossGoalScreen> {
     try {
       final user = context.read<AuthService>().currentUser;
       if (user != null) {
-        final bmr = await context.read<FirebaseService>().calculateBMR(user.uid);
+        final bmr =
+            await context.read<FirebaseService>().calculateBMR(user.uid);
         setState(() {
           _estimatedBMR = bmr;
         });
@@ -164,17 +166,18 @@ class _WeightLossGoalScreenState extends State<WeightLossGoalScreen> {
                     const SizedBox(height: 12),
                     Text(
                       'Set Your Weight Loss Goal',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style:
+                          Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Create a personalized diet plan based on your weight loss target',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.grey[600],
-                      ),
+                            color: Colors.grey[600],
+                          ),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -192,13 +195,15 @@ class _WeightLossGoalScreenState extends State<WeightLossGoalScreen> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.monitor_weight, color: Theme.of(context).colorScheme.primary),
+                        Icon(Icons.monitor_weight,
+                            color: Theme.of(context).colorScheme.primary),
                         const SizedBox(width: 8),
                         Text(
                           'Current Weight',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                       ],
                     ),
@@ -237,13 +242,15 @@ class _WeightLossGoalScreenState extends State<WeightLossGoalScreen> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.track_changes, color: Theme.of(context).colorScheme.secondary),
+                        Icon(Icons.track_changes,
+                            color: Theme.of(context).colorScheme.secondary),
                         const SizedBox(width: 8),
                         Text(
                           'Target Weight',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                       ],
                     ),
@@ -261,16 +268,20 @@ class _WeightLossGoalScreenState extends State<WeightLossGoalScreen> {
                           return 'Please enter your target weight';
                         }
                         final targetWeight = double.tryParse(value);
-                        final currentWeight = double.tryParse(_currentWeightController.text);
-                        
-                        if (targetWeight == null || targetWeight <= 0 || targetWeight > 1100) {
+                        final currentWeight =
+                            double.tryParse(_currentWeightController.text);
+
+                        if (targetWeight == null ||
+                            targetWeight <= 0 ||
+                            targetWeight > 1100) {
                           return 'Please enter a valid weight';
                         }
-                        
-                        if (currentWeight != null && targetWeight >= currentWeight) {
+
+                        if (currentWeight != null &&
+                            targetWeight >= currentWeight) {
                           return 'Target weight must be less than current weight';
                         }
-                        
+
                         return null;
                       },
                     ),
@@ -289,13 +300,15 @@ class _WeightLossGoalScreenState extends State<WeightLossGoalScreen> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.speed, color: Theme.of(context).colorScheme.tertiary),
+                        Icon(Icons.speed,
+                            color: Theme.of(context).colorScheme.tertiary),
                         const SizedBox(width: 8),
                         Text(
                           'Weight Loss Rate',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                       ],
                     ),
@@ -303,9 +316,9 @@ class _WeightLossGoalScreenState extends State<WeightLossGoalScreen> {
                     Text(
                       '${_weightLossPerWeek.toStringAsFixed(1)} lbs per week',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.tertiary,
-                      ),
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.tertiary,
+                          ),
                     ),
                     const SizedBox(height: 8),
                     Slider(
@@ -313,7 +326,8 @@ class _WeightLossGoalScreenState extends State<WeightLossGoalScreen> {
                       min: 0.5,
                       max: 3.0,
                       divisions: 10,
-                      label: '${_weightLossPerWeek.toStringAsFixed(1)} lbs/week',
+                      label:
+                          '${_weightLossPerWeek.toStringAsFixed(1)} lbs/week',
                       onChanged: (value) {
                         setState(() {
                           _weightLossPerWeek = value;
@@ -323,8 +337,8 @@ class _WeightLossGoalScreenState extends State<WeightLossGoalScreen> {
                     Text(
                       'Recommended: 1-2 lbs per week for safe weight loss',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
-                      ),
+                            color: Colors.grey[600],
+                          ),
                     ),
                   ],
                 ),
@@ -342,18 +356,19 @@ class _WeightLossGoalScreenState extends State<WeightLossGoalScreen> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.calculate, color: Theme.of(context).colorScheme.primary),
+                        Icon(Icons.calculate,
+                            color: Theme.of(context).colorScheme.primary),
                         const SizedBox(width: 8),
                         Text(
                           'Daily Calorie Plan',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 16),
-                    
                     _buildCalorieSummaryRow(
                       'Your BMR (Base Metabolic Rate)',
                       '${_estimatedBMR.round()} cal',
@@ -375,7 +390,6 @@ class _WeightLossGoalScreenState extends State<WeightLossGoalScreen> {
                       isTotal: true,
                     ),
                     const SizedBox(height: 12),
-                    
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
@@ -411,13 +425,15 @@ class _WeightLossGoalScreenState extends State<WeightLossGoalScreen> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.calendar_today, color: Theme.of(context).colorScheme.secondary),
+                        Icon(Icons.calendar_today,
+                            color: Theme.of(context).colorScheme.secondary),
                         const SizedBox(width: 8),
                         Text(
                           'Start Date',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                       ],
                     ),
@@ -425,7 +441,8 @@ class _WeightLossGoalScreenState extends State<WeightLossGoalScreen> {
                     GestureDetector(
                       onTap: _selectStartDate,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 12, horizontal: 16),
                         decoration: BoxDecoration(
                           border: Border.all(color: Colors.grey),
                           borderRadius: BorderRadius.circular(8),
@@ -473,23 +490,24 @@ class _WeightLossGoalScreenState extends State<WeightLossGoalScreen> {
     );
   }
 
-  Widget _buildCalorieSummaryRow(String label, String value, Color color, {bool isTotal = false}) {
+  Widget _buildCalorieSummaryRow(String label, String value, Color color,
+      {bool isTotal = false}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           label,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-          ),
+                fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
+              ),
         ),
         Text(
           value,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: color,
-            fontWeight: FontWeight.bold,
-            fontSize: isTotal ? 18 : 14,
-          ),
+                color: color,
+                fontWeight: FontWeight.bold,
+                fontSize: isTotal ? 18 : 14,
+              ),
         ),
       ],
     );

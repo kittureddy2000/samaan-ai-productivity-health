@@ -118,7 +118,8 @@ class DailyEntry {
 
   // Calculate total calories burned
   double get totalCaloriesBurned {
-    return exerciseEntries.fold(0.0, (sum, entry) => sum + entry.caloriesBurned);
+    return exerciseEntries.fold(
+        0.0, (sum, entry) => sum + entry.caloriesBurned);
   }
 
   // Convert to Firestore document
@@ -126,7 +127,7 @@ class DailyEntry {
     // Normalize date to midnight UTC to avoid timezone confusion
     // This ensures Daily Log date and Reports date are consistent
     final normalizedDate = DateTime.utc(date.year, date.month, date.day);
-    
+
     return {
       'uid': uid,
       'date': Timestamp.fromDate(normalizedDate),
@@ -145,7 +146,7 @@ class DailyEntry {
     if (data == null) {
       throw Exception('Document data is null');
     }
-    
+
     return DailyEntry(
       id: doc.id,
       uid: data['uid'] as String? ?? '',
@@ -227,4 +228,4 @@ class DailyEntry {
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
-} 
+}

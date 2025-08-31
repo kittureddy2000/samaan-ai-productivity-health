@@ -70,13 +70,10 @@ class FirebaseService extends ChangeNotifier {
     try {
       final currentUser = _auth.currentUser;
       if (currentUser?.photoURL != null) {
-        await _firestore
-            .collection(usersCollection)
-            .doc(uid)
-            .update({
-              'photoURL': currentUser!.photoURL,
-              'updatedAt': Timestamp.fromDate(DateTime.now()),
-            });
+        await _firestore.collection(usersCollection).doc(uid).update({
+          'photoURL': currentUser!.photoURL,
+          'updatedAt': Timestamp.fromDate(DateTime.now()),
+        });
         print('✅ Synced profile picture: ${currentUser.photoURL}');
       }
     } catch (e) {
@@ -90,14 +87,15 @@ class FirebaseService extends ChangeNotifier {
     try {
       final dateString = _formatDateString(entry.date);
       final docId = '${entry.uid}_$dateString';
-      
-      await _firestore
-          .collection(dailyEntriesCollection)
-          .doc(docId)
-          .set(entry.copyWith(
-            id: docId,
-            updatedAt: DateTime.now(),
-          ).toFirestore(), SetOptions(merge: true));
+
+      await _firestore.collection(dailyEntriesCollection).doc(docId).set(
+          entry
+              .copyWith(
+                id: docId,
+                updatedAt: DateTime.now(),
+              )
+              .toFirestore(),
+          SetOptions(merge: true));
     } catch (e) {
       throw Exception('Failed to save daily entry: $e');
     }
@@ -107,12 +105,10 @@ class FirebaseService extends ChangeNotifier {
     try {
       final dateString = _formatDateString(date);
       final docId = '${uid}_$dateString';
-      
-      final doc = await _firestore
-          .collection(dailyEntriesCollection)
-          .doc(docId)
-          .get();
-      
+
+      final doc =
+          await _firestore.collection(dailyEntriesCollection).doc(docId).get();
+
       if (doc.exists) {
         return DailyEntry.fromFirestore(doc);
       }
@@ -125,7 +121,7 @@ class FirebaseService extends ChangeNotifier {
   Stream<DailyEntry?> getDailyEntryStream(String uid, DateTime date) {
     final dateString = _formatDateString(date);
     final docId = '${uid}_$dateString';
-    
+
     return _firestore
         .collection(dailyEntriesCollection)
         .doc(docId)
@@ -156,11 +152,11 @@ class FirebaseService extends ChangeNotifier {
   // Add food entry to today's log
   Future<void> addFoodEntry(FoodEntry foodEntry) async {
     if (_currentUserId == null) throw Exception('User not authenticated');
-    
+
     try {
       final today = DateTime.now();
       final existingEntry = await getDailyEntry(_currentUserId!, today);
-      
+
       if (existingEntry != null) {
         final updatedFoodEntries = [...existingEntry.foodEntries, foodEntry];
         await createOrUpdateDailyEntry(
@@ -186,13 +182,16 @@ class FirebaseService extends ChangeNotifier {
   // Add exercise entry to today's log
   Future<void> addExerciseEntry(ExerciseEntry exerciseEntry) async {
     if (_currentUserId == null) throw Exception('User not authenticated');
-    
+
     try {
       final today = DateTime.now();
       final existingEntry = await getDailyEntry(_currentUserId!, today);
-      
+
       if (existingEntry != null) {
-        final updatedExerciseEntries = [...existingEntry.exerciseEntries, exerciseEntry];
+        final updatedExerciseEntries = [
+          ...existingEntry.exerciseEntries,
+          exerciseEntry
+        ];
         await createOrUpdateDailyEntry(
           existingEntry.copyWith(exerciseEntries: updatedExerciseEntries),
         );
@@ -216,11 +215,11 @@ class FirebaseService extends ChangeNotifier {
   // Update weight for today
   Future<void> updateWeight(double weight) async {
     if (_currentUserId == null) throw Exception('User not authenticated');
-    
+
     try {
       final today = DateTime.now();
       final existingEntry = await getDailyEntry(_currentUserId!, today);
-      
+
       if (existingEntry != null) {
         await createOrUpdateDailyEntry(
           existingEntry.copyWith(weight: weight),
@@ -248,11 +247,11 @@ class FirebaseService extends ChangeNotifier {
   Future<Map<String, dynamic>> debugUserProfile(String uid) async {
     try {
       final userDoc = await _firestore.collection('users').doc(uid).get();
-      
+
       if (!userDoc.exists) {
         return {'exists': false, 'error': 'User profile not found'};
       }
-      
+
       final userData = userDoc.data()!;
       final result = {
         'exists': true,
@@ -270,7 +269,7 @@ class FirebaseService extends ChangeNotifier {
           'dateOfBirth': userData['dateOfBirth']?.toString(),
         }
       };
-      
+
       print('👤 User profile debug: $result');
       return result;
     } catch (e) {
@@ -282,13 +281,15 @@ class FirebaseService extends ChangeNotifier {
   Future<double> calculateBMR(String uid) async {
     try {
       print('🔍 Calculating BMR for user: $uid');
-      
+
       // Debug user profile first
       await debugUserProfile(uid);
-      
+
       // Check environment configuration
-      const bool useEmulators = bool.fromEnvironment('USE_FIREBASE_EMULATORS', defaultValue: false);
-      const String environment = String.fromEnvironment('ENVIRONMENT', defaultValue: 'staging');
+      const bool useEmulators =
+          bool.fromEnvironment('USE_FIREBASE_EMULATORS', defaultValue: false);
+      const String environment =
+          String.fromEnvironment('ENVIRONMENT', defaultValue: 'staging');
 
       if (useEmulators) {
         // Use HTTP endpoint for emulator to avoid auth issues
@@ -301,13 +302,16 @@ class FirebaseService extends ChangeNotifier {
         // Use HTTP endpoint based on environment (more reliable than callable)
         String endpoint;
         if (environment == 'production') {
-          endpoint = 'https://us-central1-samaan-ai-production-2025.cloudfunctions.net/calculateBMRHttp';
+          endpoint =
+              'https://us-central1-samaan-ai-production-2025.cloudfunctions.net/calculateBMRHttp';
         } else {
           // staging, development, or default
-          endpoint = 'https://us-central1-samaan-ai-staging-2025.cloudfunctions.net/calculateBMRHttp';
+          endpoint =
+              'https://us-central1-samaan-ai-staging-2025.cloudfunctions.net/calculateBMRHttp';
         }
-        
-        print('📞 Calling calculateBMR HTTP endpoint ($environment): $endpoint');
+
+        print(
+            '📞 Calling calculateBMR HTTP endpoint ($environment): $endpoint');
         final response = await _makeHttpRequest(endpoint, {'uid': uid});
         print('✅ BMR calculation successful: ${response}');
         return (response['bmr'] ?? 0).toDouble();
@@ -315,26 +319,29 @@ class FirebaseService extends ChangeNotifier {
     } on FirebaseFunctionsException catch (e) {
       print('❌ Firebase Functions Error: ${e.code} - ${e.message}');
       print('📋 Error details: ${e.details}');
-      
+
       // Provide more specific error messages based on the error code
       String errorMessage = 'Failed to calculate BMR';
       switch (e.code) {
         case 'not-found':
-          errorMessage = 'User profile not found. Please complete your profile setup.';
+          errorMessage =
+              'User profile not found. Please complete your profile setup.';
           break;
         case 'invalid-argument':
-          errorMessage = 'Missing or invalid profile data. Please check your height, weight, gender, and date of birth in your profile.';
+          errorMessage =
+              'Missing or invalid profile data. Please check your height, weight, gender, and date of birth in your profile.';
           break;
         case 'unauthenticated':
           errorMessage = 'Authentication required. Please sign in again.';
           break;
         case 'internal':
-          errorMessage = 'Internal server error. This might be due to missing profile data or a server issue.';
+          errorMessage =
+              'Internal server error. This might be due to missing profile data or a server issue.';
           break;
         default:
           errorMessage = 'BMR calculation failed: ${e.message}';
       }
-      
+
       throw Exception(errorMessage);
     } catch (e) {
       print('❌ Unexpected error in calculateBMR: $e');
@@ -342,13 +349,13 @@ class FirebaseService extends ChangeNotifier {
     }
   }
 
-
-
   Future<CalorieReport> generateCalorieReport(String uid, String period) async {
     try {
       // Check environment configuration
-      const bool useEmulators = bool.fromEnvironment('USE_FIREBASE_EMULATORS', defaultValue: false);
-      const String environment = String.fromEnvironment('ENVIRONMENT', defaultValue: 'staging');
+      const bool useEmulators =
+          bool.fromEnvironment('USE_FIREBASE_EMULATORS', defaultValue: false);
+      const String environment =
+          String.fromEnvironment('ENVIRONMENT', defaultValue: 'staging');
 
       if (useEmulators) {
         // Use HTTP endpoint for emulator to avoid auth issues
@@ -358,13 +365,16 @@ class FirebaseService extends ChangeNotifier {
         // Use HTTP endpoint based on environment (more reliable than callable)
         String endpoint;
         if (environment == 'production') {
-          endpoint = 'https://us-central1-samaan-ai-production-2025.cloudfunctions.net/generateCalorieReportHttp';
+          endpoint =
+              'https://us-central1-samaan-ai-production-2025.cloudfunctions.net/generateCalorieReportHttp';
         } else {
           // staging, development, or default
-          endpoint = 'https://us-central1-samaan-ai-staging-2025.cloudfunctions.net/generateCalorieReportHttp';
+          endpoint =
+              'https://us-central1-samaan-ai-staging-2025.cloudfunctions.net/generateCalorieReportHttp';
         }
-        
-        final response = await _makeHttpRequest(endpoint, {'uid': uid, 'period': period});
+
+        final response =
+            await _makeHttpRequest(endpoint, {'uid': uid, 'period': period});
         return CalorieReport.fromJson(response);
       }
     } catch (e) {
@@ -377,7 +387,8 @@ class FirebaseService extends ChangeNotifier {
   }
 
   // Helper method for HTTP endpoint calls (emulator only)
-  Future<Map<String, dynamic>> _generateCalorieReportHttp(String uid, String period) async {
+  Future<Map<String, dynamic>> _generateCalorieReportHttp(
+      String uid, String period) async {
     try {
       final response = await _makeHttpRequest(
         'http://127.0.0.1:5001/fitness-tracker-p2025/us-central1/generateCalorieReportHttp',
@@ -389,7 +400,8 @@ class FirebaseService extends ChangeNotifier {
     }
   }
 
-  Future<Map<String, dynamic>> _makeHttpRequest(String url, Map<String, dynamic> data) async {
+  Future<Map<String, dynamic>> _makeHttpRequest(
+      String url, Map<String, dynamic> data) async {
     try {
       final uri = Uri.parse(url);
       // Use the injected _httpClient for testability
@@ -398,7 +410,7 @@ class FirebaseService extends ChangeNotifier {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(data),
       );
-      
+
       if (resp.statusCode == 200) {
         return jsonDecode(resp.body) as Map<String, dynamic>;
       }
@@ -418,10 +430,10 @@ class FirebaseService extends ChangeNotifier {
   // Get today's summary
   Future<Map<String, dynamic>> getTodaySummary() async {
     if (_currentUserId == null) throw Exception('User not authenticated');
-    
+
     try {
       final today = DateTime.now();
-      
+
       // Get today's entry (might be null for new users)
       DailyEntry? todayEntry;
       try {
@@ -431,7 +443,7 @@ class FirebaseService extends ChangeNotifier {
         // which is fine for new users - continue with null
         print('No daily entry found for today (expected for new users): $e');
       }
-      
+
       // Calculate BMR (this should work as long as user profile exists)
       double bmr = 0.0;
       try {
@@ -441,22 +453,23 @@ class FirebaseService extends ChangeNotifier {
         print('BMR calculation failed, using default: $e');
         bmr = 1500.0; // Default BMR
       }
-      
+
       final caloriesConsumed = todayEntry?.totalCaloriesConsumed ?? 0.0;
       final caloriesBurned = todayEntry?.totalCaloriesBurned ?? 0.0;
-      
+
       // Calculate net deficit based on weight loss goal if available
       // For weight loss: negative deficit = good (eating less than target)
       // For maintenance: deficit near 0 = good
       double netDeficit;
       double? targetDailyCalories;
-      
+
       try {
         final goal = await getActiveWeightLossGoal();
         if (goal != null) {
           // With weight loss goal: Target = BMR - required deficit + exercise
           targetDailyCalories = goal.targetDailyCalories(bmr);
-          netDeficit = (targetDailyCalories + caloriesBurned) - caloriesConsumed;
+          netDeficit =
+              (targetDailyCalories + caloriesBurned) - caloriesConsumed;
         } else {
           // Without goal: Target = BMR + exercise (maintenance)
           targetDailyCalories = bmr + caloriesBurned;
@@ -467,7 +480,7 @@ class FirebaseService extends ChangeNotifier {
         targetDailyCalories = bmr + caloriesBurned;
         netDeficit = targetDailyCalories - caloriesConsumed;
       }
-      
+
       return {
         'bmr': bmr,
         'caloriesConsumed': caloriesConsumed,
@@ -497,24 +510,30 @@ class FirebaseService extends ChangeNotifier {
   // Reset/Delete user data for testing
   Future<void> deleteAllUserData() async {
     if (_currentUserId == null) throw Exception('User not authenticated');
-    
+
     try {
       // Delete user profile
-      await _firestore.collection(usersCollection).doc(_currentUserId!).delete();
-      
+      await _firestore
+          .collection(usersCollection)
+          .doc(_currentUserId!)
+          .delete();
+
       // Delete all daily entries for this user
       final dailyEntriesQuery = await _firestore
           .collection(dailyEntriesCollection)
           .where('uid', isEqualTo: _currentUserId!)
           .get();
-      
+
       for (final doc in dailyEntriesQuery.docs) {
         await doc.reference.delete();
       }
-      
+
       // Delete weight loss goals
-      await _firestore.collection(weightLossGoalsCollection).doc(_currentUserId!).delete();
-      
+      await _firestore
+          .collection(weightLossGoalsCollection)
+          .doc(_currentUserId!)
+          .delete();
+
       print('All user data deleted successfully');
     } catch (e) {
       throw Exception('Failed to delete user data: $e');
@@ -535,13 +554,13 @@ class FirebaseService extends ChangeNotifier {
 
   Future<WeightLossGoal?> getActiveWeightLossGoal() async {
     if (_currentUserId == null) throw Exception('User not authenticated');
-    
+
     try {
       final doc = await _firestore
           .collection(weightLossGoalsCollection)
           .doc(_currentUserId!)
           .get();
-      
+
       if (doc.exists) {
         final goal = WeightLossGoal.fromFirestore(doc);
         return goal.isActive ? goal : null;
@@ -554,11 +573,9 @@ class FirebaseService extends ChangeNotifier {
 
   Future<WeightLossGoal?> getUserWeightLossGoal(String uid) async {
     try {
-      final doc = await _firestore
-          .collection(weightLossGoalsCollection)
-          .doc(uid)
-          .get();
-      
+      final doc =
+          await _firestore.collection(weightLossGoalsCollection).doc(uid).get();
+
       if (doc.exists) {
         return WeightLossGoal.fromFirestore(doc);
       }
@@ -576,7 +593,7 @@ class FirebaseService extends ChangeNotifier {
   // Get summary for a specific date (used by dashboard navigation)
   Future<Map<String, dynamic>> getSummaryForDate(DateTime date) async {
     if (_currentUserId == null) throw Exception('User not authenticated');
-    
+
     try {
       // Get entry for specified date
       DailyEntry? dayEntry;
@@ -585,7 +602,7 @@ class FirebaseService extends ChangeNotifier {
       } catch (e) {
         print('No daily entry found for ${date.toString()}: $e');
       }
-      
+
       // Get weight loss goal
       WeightLossGoal? goal;
       try {
@@ -593,7 +610,7 @@ class FirebaseService extends ChangeNotifier {
       } catch (e) {
         print('No weight loss goal found: $e');
       }
-      
+
       // Calculate BMR
       double bmr = 0.0;
       try {
@@ -602,14 +619,14 @@ class FirebaseService extends ChangeNotifier {
         print('BMR calculation failed, using default: $e');
         bmr = 1500.0;
       }
-      
+
       final caloriesConsumed = dayEntry?.totalCaloriesConsumed ?? 0.0;
       final caloriesBurned = dayEntry?.totalCaloriesBurned ?? 0.0;
-      
+
       // Calculate net deficit with weight loss goal context
       double netDeficit;
       double? targetDailyCalories;
-      
+
       if (goal != null) {
         // With weight loss goal: Target + exercise - consumed
         targetDailyCalories = goal.targetDailyCalories(bmr);
@@ -619,7 +636,7 @@ class FirebaseService extends ChangeNotifier {
         targetDailyCalories = bmr + caloriesBurned;
         netDeficit = targetDailyCalories - caloriesConsumed;
       }
-      
+
       return {
         'bmr': bmr,
         'caloriesConsumed': caloriesConsumed,
@@ -646,4 +663,4 @@ class FirebaseService extends ChangeNotifier {
       };
     }
   }
-} 
+}

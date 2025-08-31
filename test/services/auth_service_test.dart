@@ -16,7 +16,8 @@ void main() {
     });
 
     group('Email and Password Authentication', () {
-      test('signInWithEmailAndPassword returns UserCredential on success', () async {
+      test('signInWithEmailAndPassword returns UserCredential on success',
+          () async {
         const email = 'test@example.com';
         const password = 'password123';
 
@@ -58,7 +59,6 @@ void main() {
         expect(result, isA<UserCredential>());
         expect(result?.user?.email, equals(email));
       });
-
     });
 
     group('User State', () {

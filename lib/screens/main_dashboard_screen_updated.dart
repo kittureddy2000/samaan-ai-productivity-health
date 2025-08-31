@@ -13,7 +13,7 @@ class MainDashboardScreenUpdated extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthService>().currentUser;
-    
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
@@ -67,7 +67,8 @@ class MainDashboardScreenUpdated extends StatelessWidget {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => const DashboardScreen()),
+                                  builder: (context) =>
+                                      const DashboardScreen()),
                             );
                           },
                         },
@@ -135,14 +136,16 @@ class MainDashboardScreenUpdated extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
       ),
       child: InkWell(
-        onTap: isActive ? onTap : () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('This feature is coming soon!'),
-              duration: Duration(seconds: 2),
-            ),
-          );
-        },
+        onTap: isActive
+            ? onTap
+            : () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('This feature is coming soon!'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              },
         borderRadius: BorderRadius.circular(16),
         child: Opacity(
           opacity: isActive ? 1.0 : 0.5,
@@ -173,4 +176,3 @@ class MainDashboardScreenUpdated extends StatelessWidget {
     );
   }
 }
-

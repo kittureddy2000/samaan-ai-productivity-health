@@ -39,7 +39,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
 
     try {
-      final summary = await context.read<FirebaseService>().getSummaryForDate(_selectedDate);
+      final summary = await context
+          .read<FirebaseService>()
+          .getSummaryForDate(_selectedDate);
       setState(() {
         _todaySummary = summary;
       });
@@ -62,7 +64,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void _navigateToPreviousDay() {
     final previousDay = _selectedDate.subtract(const Duration(days: 1));
     final earliestDate = DateTime.now().subtract(const Duration(days: 365));
-    if (previousDay.isAfter(earliestDate) || previousDay.isAtSameMomentAs(earliestDate)) {
+    if (previousDay.isAfter(earliestDate) ||
+        previousDay.isAtSameMomentAs(earliestDate)) {
       setState(() {
         _selectedDate = previousDay;
       });
@@ -84,8 +87,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _isToday() {
     final today = DateTime.now();
     return _selectedDate.year == today.year &&
-           _selectedDate.month == today.month &&
-           _selectedDate.day == today.day;
+        _selectedDate.month == today.month &&
+        _selectedDate.day == today.day;
   }
 
   // Beautiful Header Section
@@ -146,7 +149,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               const SizedBox(height: 20),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(12),
@@ -164,7 +168,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      _isToday() ? 'Today' : DateFormat('MMM dd, yyyy').format(_selectedDate),
+                      _isToday()
+                          ? 'Today'
+                          : DateFormat('MMM dd, yyyy').format(_selectedDate),
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.9),
                         fontSize: 16,
@@ -190,25 +196,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _buildDateNavButton(
             Icons.chevron_left,
             () {
-              final earliestDate = DateTime.now().subtract(const Duration(days: 365));
-              final previousDay = _selectedDate.subtract(const Duration(days: 1));
-              if (previousDay.isAfter(earliestDate) || previousDay.isAtSameMomentAs(earliestDate)) {
+              final earliestDate =
+                  DateTime.now().subtract(const Duration(days: 365));
+              final previousDay =
+                  _selectedDate.subtract(const Duration(days: 1));
+              if (previousDay.isAfter(earliestDate) ||
+                  previousDay.isAtSameMomentAs(earliestDate)) {
                 _navigateToPreviousDay();
               }
             },
             enabled: () {
-              final earliestDate = DateTime.now().subtract(const Duration(days: 365));
-              final previousDay = _selectedDate.subtract(const Duration(days: 1));
-              return previousDay.isAfter(earliestDate) || previousDay.isAtSameMomentAs(earliestDate);
+              final earliestDate =
+                  DateTime.now().subtract(const Duration(days: 365));
+              final previousDay =
+                  _selectedDate.subtract(const Duration(days: 1));
+              return previousDay.isAfter(earliestDate) ||
+                  previousDay.isAtSameMomentAs(earliestDate);
             }(),
           ),
           Expanded(
             child: Text(
               DateFormat('EEEE, MMMM d').format(_selectedDate),
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF374151),
-              ),
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF374151),
+                  ),
               textAlign: TextAlign.center,
             ),
           ),
@@ -232,7 +244,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildDateNavButton(IconData icon, VoidCallback onPressed, {required bool enabled}) {
+  Widget _buildDateNavButton(IconData icon, VoidCallback onPressed,
+      {required bool enabled}) {
     return Container(
       width: 40,
       height: 40,
@@ -257,7 +270,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   // Compact Summary Grid - Smaller tiles
-  Widget _buildSummaryGrid(double bmr, double caloriesConsumed, double caloriesBurned, double netDeficit) {
+  Widget _buildSummaryGrid(double bmr, double caloriesConsumed,
+      double caloriesBurned, double netDeficit) {
     return GridView.count(
       crossAxisCount: 2,
       shrinkWrap: true,
@@ -346,10 +360,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Text(
               title,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: const Color(0xFF6B7280),
-                fontWeight: FontWeight.w500,
-                fontSize: 11, // Smaller text
-              ),
+                    color: const Color(0xFF6B7280),
+                    fontWeight: FontWeight.w500,
+                    fontSize: 11, // Smaller text
+                  ),
             ),
             const SizedBox(height: 2),
             RichText(
@@ -358,18 +372,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   TextSpan(
                     text: value,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF111827),
-                      fontSize: 18, // Smaller number
-                    ),
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF111827),
+                          fontSize: 18, // Smaller number
+                        ),
                   ),
                   TextSpan(
                     text: ' $unit',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: const Color(0xFF6B7280),
-                      fontWeight: FontWeight.w500,
-                      fontSize: 10, // Smaller unit
-                    ),
+                          color: const Color(0xFF6B7280),
+                          fontWeight: FontWeight.w500,
+                          fontSize: 10, // Smaller unit
+                        ),
                   ),
                 ],
               ),
@@ -397,7 +411,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final netDeficit = _todaySummary!['netDeficit'] ?? 0.0;
     final weight = _todaySummary!['weight'];
     final foodEntries = _todaySummary!['foodEntries'] as List<FoodEntry>;
-    final exerciseEntries = _todaySummary!['exerciseEntries'] as List<ExerciseEntry>;
+    final exerciseEntries =
+        _todaySummary!['exerciseEntries'] as List<ExerciseEntry>;
 
     return Container(
       decoration: const BoxDecoration(
@@ -418,7 +433,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             children: [
               // Beautiful Header Section
               _buildHeaderSection(),
-              
+
               // Main Content
               Padding(
                 padding: const EdgeInsets.all(16),
@@ -428,9 +443,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     // Date Navigation
                     _buildDateNavigation(),
                     const SizedBox(height: 20),
-                    
+
                     // Summary Cards Grid - Smaller and more elegant
-                    _buildSummaryGrid(bmr, caloriesConsumed, caloriesBurned, netDeficit),
+                    _buildSummaryGrid(
+                        bmr, caloriesConsumed, caloriesBurned, netDeficit),
                     const SizedBox(height: 20),
 
                     // Weight Card (if available)
@@ -448,9 +464,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       _buildEntriesSection(
                         _isToday() ? 'Today\'s Food' : 'Food Entries',
                         Icons.restaurant,
-                        foodEntries.map((entry) => 
-                          '${entry.name} - ${entry.calories.round()} kcal'
-                        ).toList(),
+                        foodEntries
+                            .map((entry) =>
+                                '${entry.name} - ${entry.calories.round()} kcal')
+                            .toList(),
                       ),
                     ],
 
@@ -459,9 +476,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       _buildEntriesSection(
                         _isToday() ? 'Today\'s Exercise' : 'Exercise Entries',
                         Icons.fitness_center,
-                        exerciseEntries.map((entry) => 
-                          '${entry.name} - ${entry.caloriesBurned.round()} kcal (${entry.durationMinutes} min)'
-                        ).toList(),
+                        exerciseEntries
+                            .map((entry) =>
+                                '${entry.name} - ${entry.caloriesBurned.round()} kcal (${entry.durationMinutes} min)')
+                            .toList(),
                       ),
                     ],
 
@@ -478,17 +496,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              _isToday() ? 'No entries today' : 'No entries for this date',
+                              _isToday()
+                                  ? 'No entries today'
+                                  : 'No entries for this date',
                               style: Theme.of(context).textTheme.titleMedium,
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              _isToday() 
+                              _isToday()
                                   ? 'Start logging your food and exercise'
                                   : 'No data found for ${DateFormat('MMM d, yyyy').format(_selectedDate)}',
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: Colors.grey[600],
-                              ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(
+                                    color: Colors.grey[600],
+                                  ),
                               textAlign: TextAlign.center,
                             ),
                           ],
@@ -547,9 +570,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Text(
                     'Current Weight',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: const Color(0xFF6B7280),
-                      fontWeight: FontWeight.w500,
-                    ),
+                          color: const Color(0xFF6B7280),
+                          fontWeight: FontWeight.w500,
+                        ),
                   ),
                   const SizedBox(height: 4),
                   RichText(
@@ -557,17 +580,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       children: [
                         TextSpan(
                           text: weight.toStringAsFixed(1),
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF111827),
-                          ),
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF111827),
+                              ),
                         ),
                         TextSpan(
                           text: ' lbs',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: const Color(0xFF6B7280),
-                            fontWeight: FontWeight.w500,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: const Color(0xFF6B7280),
+                                    fontWeight: FontWeight.w500,
+                                  ),
                         ),
                       ],
                     ),
@@ -589,12 +616,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         Text(
           'Quick Actions',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: const Color(0xFF111827),
-          ),
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF111827),
+              ),
         ),
         const SizedBox(height: 16),
-        
+
         // Daily Log Button
         _buildActionButton(
           'Daily Log Entry',
@@ -611,7 +638,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           },
         ),
         const SizedBox(height: 12),
-        
+
         // Reports Button
         _buildActionButton(
           'View Reports',
@@ -685,17 +712,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     children: [
                       Text(
                         title,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF111827),
-                        ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF111827),
+                                ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         subtitle,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: const Color(0xFF6B7280),
-                        ),
+                              color: const Color(0xFF6B7280),
+                            ),
                       ),
                     ],
                   ),
@@ -713,7 +741,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildEntriesSection(String title, IconData icon, List<String> entries) {
+  Widget _buildEntriesSection(
+      String title, IconData icon, List<String> entries) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -738,28 +767,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Text(
                   title,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF111827),
-                  ),
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF111827),
+                      ),
                 ),
               ],
             ),
             const SizedBox(height: 12),
             ...entries.take(3).map((entry) => Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Text(
-                '• $entry',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: const Color(0xFF374151),
-                ),
-              ),
-            )),
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(
+                    '• $entry',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: const Color(0xFF374151),
+                        ),
+                  ),
+                )),
             if (entries.length > 3)
               Text(
                 'and ${entries.length - 3} more...',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: const Color(0xFF6B7280),
-                ),
+                      color: const Color(0xFF6B7280),
+                    ),
               ),
           ],
         ),

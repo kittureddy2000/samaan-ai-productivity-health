@@ -12,7 +12,7 @@ class MainDashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthService>().currentUser;
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Samaan AI Dashboard'),
@@ -41,13 +41,13 @@ class MainDashboardScreen extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: FutureBuilder<UserProfile?>(
-                future: user != null 
+                future: user != null
                     ? context.read<FirebaseService>().getUserProfile(user!.uid)
                     : Future.value(null),
                 builder: (context, snapshot) {
                   final profile = snapshot.data;
                   final photoURL = user?.photoURL ?? profile?.photoURL;
-                  
+
                   return CircleAvatar(
                     backgroundColor: Colors.white,
                     child: photoURL != null && photoURL.isNotEmpty
@@ -59,8 +59,10 @@ class MainDashboardScreen extends StatelessWidget {
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) {
                                 return Text(
-                                  user?.email?.substring(0, 1).toUpperCase() ?? 'U',
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                  user?.email?.substring(0, 1).toUpperCase() ??
+                                      'U',
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold),
                                 );
                               },
                             ),
@@ -92,81 +94,81 @@ class MainDashboardScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-            // Welcome Message
-            Text(
-              'Welcome back, ${user?.email?.split('@')[0] ?? 'User'}!',
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+              // Welcome Message
+              Text(
+                'Welcome back, ${user?.email?.split('@')[0] ?? 'User'}!',
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Choose a tool to get started with your productivity and health journey',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
+              const SizedBox(height: 8),
+              const Text(
+                'Choose a tool to get started with your productivity and health journey',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey,
+                ),
               ),
-            ),
-            const SizedBox(height: 32),
-            
-            // Dashboard Tiles
-            Expanded(
-              child: GridView.count(
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                children: [
-                  // Fitness Tracker Tile (Active) - Now with beautiful dashboard
-                  _buildDashboardTile(
-                    context: context,
-                    title: 'Fitness Tracker',
-                    subtitle: 'Track calories, exercise & weight',
-                    icon: Icons.fitness_center,
-                    color: const Color(0xFF1565C0),
-                    isActive: true,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const DashboardScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  
-                  // Task Manager Tile (Coming Soon)
-                  _buildDashboardTile(
-                    context: context,
-                    title: 'Task Manager',
-                    subtitle: 'Organize and track your tasks',
-                    icon: Icons.task_alt,
-                    color: const Color(0xFF1976D2),
-                    isActive: false,
-                  ),
-                  
-                  // Study Planner Tile (Coming Soon)
-                  _buildDashboardTile(
-                    context: context,
-                    title: 'Study Planner',
-                    subtitle: 'Plan your learning schedule',
-                    icon: Icons.school,
-                    color: const Color(0xFF1E88E5),
-                    isActive: false,
-                  ),
-                  
-                  // Habit Tracker Tile (Coming Soon)
-                  _buildDashboardTile(
-                    context: context,
-                    title: 'Habit Tracker',
-                    subtitle: 'Build positive daily habits',
-                    icon: Icons.refresh,
-                    color: const Color(0xFF2196F3),
-                    isActive: false,
-                  ),
-                ],
+              const SizedBox(height: 32),
+
+              // Dashboard Tiles
+              Expanded(
+                child: GridView.count(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  children: [
+                    // Fitness Tracker Tile (Active) - Now with beautiful dashboard
+                    _buildDashboardTile(
+                      context: context,
+                      title: 'Fitness Tracker',
+                      subtitle: 'Track calories, exercise & weight',
+                      icon: Icons.fitness_center,
+                      color: const Color(0xFF1565C0),
+                      isActive: true,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const DashboardScreen(),
+                          ),
+                        );
+                      },
+                    ),
+
+                    // Task Manager Tile (Coming Soon)
+                    _buildDashboardTile(
+                      context: context,
+                      title: 'Task Manager',
+                      subtitle: 'Organize and track your tasks',
+                      icon: Icons.task_alt,
+                      color: const Color(0xFF1976D2),
+                      isActive: false,
+                    ),
+
+                    // Study Planner Tile (Coming Soon)
+                    _buildDashboardTile(
+                      context: context,
+                      title: 'Study Planner',
+                      subtitle: 'Plan your learning schedule',
+                      icon: Icons.school,
+                      color: const Color(0xFF1E88E5),
+                      isActive: false,
+                    ),
+
+                    // Habit Tracker Tile (Coming Soon)
+                    _buildDashboardTile(
+                      context: context,
+                      title: 'Habit Tracker',
+                      subtitle: 'Build positive daily habits',
+                      icon: Icons.refresh,
+                      color: const Color(0xFF2196F3),
+                      isActive: false,
+                    ),
+                  ],
+                ),
               ),
-            ),
             ],
           ),
         ),
@@ -185,14 +187,15 @@ class MainDashboardScreen extends StatelessWidget {
   }) {
     return Card(
       elevation: isActive ? 8 : 3,
-      shadowColor: isActive ? color.withOpacity(0.3) : Colors.grey.withOpacity(0.2),
+      shadowColor:
+          isActive ? color.withOpacity(0.3) : Colors.grey.withOpacity(0.2),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: isActive 
-            ? onTap 
+        onTap: isActive
+            ? onTap
             : () {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -206,7 +209,7 @@ class MainDashboardScreen extends StatelessWidget {
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            gradient: isActive 
+            gradient: isActive
                 ? LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -223,7 +226,7 @@ class MainDashboardScreen extends StatelessWidget {
                       Colors.grey.withOpacity(0.05),
                     ],
                   ),
-            border: isActive 
+            border: isActive
                 ? Border.all(color: color.withOpacity(0.2), width: 1)
                 : Border.all(color: Colors.grey.withOpacity(0.2), width: 1),
           ),
@@ -233,7 +236,7 @@ class MainDashboardScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                  gradient: isActive 
+                  gradient: isActive
                       ? LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
@@ -264,7 +267,8 @@ class MainDashboardScreen extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w600,
-                  color: isActive ? const Color(0xFF1A1A1A) : Colors.grey.shade600,
+                  color:
+                      isActive ? const Color(0xFF1A1A1A) : Colors.grey.shade600,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -283,7 +287,8 @@ class MainDashboardScreen extends StatelessWidget {
               if (!isActive) ...[
                 const SizedBox(height: 12),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [

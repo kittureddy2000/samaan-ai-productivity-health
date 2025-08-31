@@ -55,9 +55,12 @@ class AuthGate extends StatelessWidget {
 
             // User is authenticated, check if profile is complete
             return FutureBuilder(
-              future: context.read<FirebaseService>().getUserProfile(snapshot.data!.uid),
+              future: context
+                  .read<FirebaseService>()
+                  .getUserProfile(snapshot.data!.uid),
               builder: (context, profileSnapshot) {
-                if (profileSnapshot.connectionState == ConnectionState.waiting) {
+                if (profileSnapshot.connectionState ==
+                    ConnectionState.waiting) {
                   return const Scaffold(
                     body: Center(
                       child: CircularProgressIndicator(),
@@ -85,4 +88,4 @@ class AuthGate extends StatelessWidget {
       },
     );
   }
-} 
+}

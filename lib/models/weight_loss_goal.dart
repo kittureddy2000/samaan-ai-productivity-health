@@ -32,7 +32,7 @@ class WeightLossGoal {
   // Calculate estimated completion date
   DateTime get estimatedCompletionDate {
     if (targetDate != null) return targetDate!;
-    
+
     final totalWeightToLose = currentWeight - targetWeight;
     final weeksNeeded = totalWeightToLose / weightLossPerWeek;
     return startDate.add(Duration(days: (weeksNeeded * 7).ceil()));
@@ -50,7 +50,7 @@ class WeightLossGoal {
     final daysSinceStart = currentDate.difference(startDate).inDays;
     final expectedWeightLoss = (daysSinceStart / 7) * weightLossPerWeek;
     final actualWeightLoss = currentWeight - latestWeight;
-    
+
     // Allow 10% tolerance
     return actualWeightLoss >= (expectedWeightLoss * 0.9);
   }
@@ -83,7 +83,9 @@ class WeightLossGoal {
       targetWeight: _safeToDouble(data['targetWeight']) ?? 150.0,
       currentWeight: _safeToDouble(data['currentWeight']) ?? 170.0,
       startDate: _safeTimestampToDate(data['startDate']),
-      targetDate: data['targetDate'] != null ? _safeTimestampToDate(data['targetDate']) : null,
+      targetDate: data['targetDate'] != null
+          ? _safeTimestampToDate(data['targetDate'])
+          : null,
       isActive: data['isActive'] as bool? ?? true,
       createdAt: _safeTimestampToDate(data['createdAt']),
       updatedAt: _safeTimestampToDate(data['updatedAt']),

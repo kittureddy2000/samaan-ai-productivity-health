@@ -58,7 +58,7 @@ class UserProfile {
     if (data == null) {
       throw Exception('Document data is null');
     }
-    
+
     return UserProfile(
       uid: data['uid'] as String? ?? '',
       email: data['email'] as String? ?? '',
@@ -117,4 +117,4 @@ class UserProfile {
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
-} 
+}

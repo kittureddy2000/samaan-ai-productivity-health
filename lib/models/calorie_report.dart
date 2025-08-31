@@ -85,11 +85,14 @@ class CalorieReport {
       startDate: DateTime.parse(json['startDate'] as String),
       endDate: DateTime.parse(json['endDate'] as String),
       data: (json['data'] as List<dynamic>? ?? [])
-          .map((item) => CalorieReportData.fromJson(item as Map<String, dynamic>))
+          .map((item) =>
+              CalorieReportData.fromJson(item as Map<String, dynamic>))
           .toList(),
       averageBMR: CalorieReportData._safeToDouble(json['averageBMR']),
-      totalCaloriesConsumed: CalorieReportData._safeToDouble(json['totalCaloriesConsumed']),
-      totalCaloriesBurned: CalorieReportData._safeToDouble(json['totalCaloriesBurned']),
+      totalCaloriesConsumed:
+          CalorieReportData._safeToDouble(json['totalCaloriesConsumed']),
+      totalCaloriesBurned:
+          CalorieReportData._safeToDouble(json['totalCaloriesBurned']),
       totalNetDeficit: CalorieReportData._safeToDouble(json['totalNetDeficit']),
       totalGlasses: CalorieReportData._safeToDouble(json['totalGlasses']),
       averageGlasses: CalorieReportData._safeToDouble(json['averageGlasses']),
@@ -122,4 +125,4 @@ class CalorieReport {
       'totalDays': totalDays,
     };
   }
-} 
+}

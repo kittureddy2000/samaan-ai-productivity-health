@@ -19,12 +19,14 @@ class AuthService extends ChangeNotifier {
       return null;
     }
     // For CI/CD, prefer a build-time provided value from GitHub Secrets.
-    const fromDefineCI = String.fromEnvironment('GOOGLE_CLIENT_ID', defaultValue: '');
+    const fromDefineCI =
+        String.fromEnvironment('GOOGLE_CLIENT_ID', defaultValue: '');
     if (fromDefineCI.isNotEmpty) {
       return fromDefineCI;
     }
     // For local development, use the STAGING_CLIENT_ID.
-    const fromDefineLocal = String.fromEnvironment('STAGING_CLIENT_ID', defaultValue: '');
+    const fromDefineLocal =
+        String.fromEnvironment('STAGING_CLIENT_ID', defaultValue: '');
     if (fromDefineLocal.isNotEmpty) {
       return fromDefineLocal;
     }
@@ -79,17 +81,18 @@ class AuthService extends ChangeNotifier {
       if (!kIsWeb) {
         await _googleSignIn.signOut();
       }
-      
+
       // Trigger the authentication flow
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      
+
       if (googleUser == null) {
         // User cancelled the sign-in
         return null;
       }
 
       // Obtain the auth details from the request
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
 
       // Create a new credential
       final credential = GoogleAuthProvider.credential(
@@ -104,30 +107,27 @@ class AuthService extends ChangeNotifier {
     } catch (e) {
       // Handle specific Google Sign-In errors
       String errorMessage = e.toString();
-      
+
       if (errorMessage.contains('PlatformException(sign_in_failed')) {
         // Extract the specific error details
         if (errorMessage.contains('ApiException: 10')) {
           throw Exception(
-            'Google Sign-In configuration error (ApiException: 10). '
-            'This usually means:\n'
-            '1. The SHA-1 fingerprint doesn\'t match what\'s registered in Firebase Console\n'
-            '2. The app package name doesn\'t match Firebase configuration\n'
-            '3. Google Play Services needs to be updated\n'
-            'Please check Firebase Console settings or use email/password sign-in.'
-          );
+              'Google Sign-In configuration error (ApiException: 10). '
+              'This usually means:\n'
+              '1. The SHA-1 fingerprint doesn\'t match what\'s registered in Firebase Console\n'
+              '2. The app package name doesn\'t match Firebase configuration\n'
+              '3. Google Play Services needs to be updated\n'
+              'Please check Firebase Console settings or use email/password sign-in.');
         }
       }
-      
-      if (errorMessage.contains('OAuth client was not found') || 
+
+      if (errorMessage.contains('OAuth client was not found') ||
           errorMessage.contains('invalid_client')) {
-        throw Exception(
-          'Google Sign-In is not configured properly. '
-          'Please configure OAuth client ID in Google Cloud Console. '
-          'For now, please use email/password sign-in.'
-        );
+        throw Exception('Google Sign-In is not configured properly. '
+            'Please configure OAuth client ID in Google Cloud Console. '
+            'For now, please use email/password sign-in.');
       }
-      
+
       // Generic Google Sign-In error with more details
       throw Exception('Google sign-in failed. Error details: $errorMessage');
     }
@@ -186,10 +186,10 @@ class AuthService extends ChangeNotifier {
         return 'Too many attempts. Please try again later.';
       case 'operation-not-allowed':
         return 'This sign-in method is not enabled in Firebase Console. '
-               'Please enable Email/Password or Google authentication in the Firebase Console.\n'
-               'Go to: Firebase Console > Authentication > Sign-in method > Enable Email/Password and Google.';
+            'Please enable Email/Password or Google authentication in the Firebase Console.\n'
+            'Go to: Firebase Console > Authentication > Sign-in method > Enable Email/Password and Google.';
       default:
         return 'An error occurred. Please try again.';
     }
   }
-} 
+}

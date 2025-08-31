@@ -34,10 +34,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       await context.read<AuthService>().signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-      );
-      
+            email: _emailController.text.trim(),
+            password: _passwordController.text,
+          );
+
       // Show success message briefly
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -104,7 +104,9 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     try {
-      await context.read<AuthService>().sendPasswordResetEmail(_emailController.text.trim());
+      await context
+          .read<AuthService>()
+          .sendPasswordResetEmail(_emailController.text.trim());
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -135,9 +137,10 @@ class _LoginScreenState extends State<LoginScreen> {
             key: _formKey,
             child: ConstrainedBox(
               constraints: BoxConstraints(
-                minHeight: MediaQuery.of(context).size.height - 
-                          MediaQuery.of(context).padding.top - 
-                          MediaQuery.of(context).padding.bottom - 48,
+                minHeight: MediaQuery.of(context).size.height -
+                    MediaQuery.of(context).padding.top -
+                    MediaQuery.of(context).padding.bottom -
+                    48,
               ),
               child: IntrinsicHeight(
                 child: Column(
@@ -184,7 +187,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         if (value == null || value.isEmpty) {
                           return 'Please enter your email';
                         }
-                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                            .hasMatch(value)) {
                           return 'Please enter a valid email';
                         }
                         return null;
@@ -201,7 +205,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         prefixIcon: const Icon(Icons.lock),
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                            _obscurePassword
+                                ? Icons.visibility
+                                : Icons.visibility_off,
                           ),
                           onPressed: () {
                             setState(() {
@@ -302,4 +308,4 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-} 
+}

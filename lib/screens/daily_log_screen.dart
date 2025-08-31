@@ -14,16 +14,16 @@ class DailyLogScreen extends StatefulWidget {
 
 class _DailyLogScreenState extends State<DailyLogScreen> {
   final _formKey = GlobalKey<FormState>();
-  
+
   DateTime _selectedDate = DateTime.now();
-  
+
   final _weightController = TextEditingController();
   final _breakfastCaloriesController = TextEditingController();
   final _lunchCaloriesController = TextEditingController();
   final _dinnerCaloriesController = TextEditingController();
   final _snacksCaloriesController = TextEditingController();
   final _exerciseCaloriesController = TextEditingController();
-  
+
   bool _isLoading = false;
   DailyEntry? _existingEntry;
 
@@ -50,10 +50,10 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
       final uid = FirebaseAuth.instance.currentUser?.uid;
       if (uid != null) {
         final entry = await firebaseService.getDailyEntry(uid, _selectedDate);
-        
+
         setState(() {
           _existingEntry = entry;
-          
+
           if (entry != null) {
             _weightController.text = entry.weight?.toString() ?? '';
             _breakfastCaloriesController.clear();
@@ -61,7 +61,7 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
             _dinnerCaloriesController.clear();
             _snacksCaloriesController.clear();
             _exerciseCaloriesController.clear();
-            
+
             for (var food in entry.foodEntries) {
               switch (food.mealType?.toLowerCase()) {
                 case 'breakfast':
@@ -78,9 +78,10 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
                   break;
               }
             }
-            
+
             if (entry.exerciseEntries.isNotEmpty) {
-              final totalCaloriesBurned = entry.exerciseEntries.fold(0.0, (sum, exercise) => sum + exercise.caloriesBurned);
+              final totalCaloriesBurned = entry.exerciseEntries
+                  .fold(0.0, (sum, exercise) => sum + exercise.caloriesBurned);
               _exerciseCaloriesController.text = totalCaloriesBurned.toString();
             }
           } else {
@@ -118,7 +119,8 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
   void _navigateToPreviousDay() {
     final previousDay = _selectedDate.subtract(const Duration(days: 1));
     final earliestDate = DateTime.now().subtract(const Duration(days: 365));
-    if (previousDay.isAfter(earliestDate) || previousDay.isAtSameMomentAs(earliestDate)) {
+    if (previousDay.isAfter(earliestDate) ||
+        previousDay.isAtSameMomentAs(earliestDate)) {
       setState(() {
         _selectedDate = previousDay;
       });
@@ -168,7 +170,9 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
         id: _existingEntry?.id ?? '',
         uid: uid,
         date: _selectedDate,
-        weight: _weightController.text.isNotEmpty ? double.parse(_weightController.text) : null,
+        weight: _weightController.text.isNotEmpty
+            ? double.parse(_weightController.text)
+            : null,
         foodEntries: foodEntries,
         exerciseEntries: exerciseEntries,
         createdAt: _existingEntry?.createdAt ?? DateTime.now(),
@@ -202,7 +206,8 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
     }
   }
 
-  void _addFoodEntry(List<FoodEntry> list, String mealType, TextEditingController controller) {
+  void _addFoodEntry(
+      List<FoodEntry> list, String mealType, TextEditingController controller) {
     if (controller.text.isNotEmpty) {
       list.add(FoodEntry(
         name: mealType,
@@ -227,8 +232,12 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
             child: CircleAvatar(
               backgroundColor: Theme.of(context).colorScheme.primary,
               child: Text(
-                FirebaseAuth.instance.currentUser?.email?.substring(0, 1).toUpperCase() ?? 'U',
-                style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+                FirebaseAuth.instance.currentUser?.email
+                        ?.substring(0, 1)
+                        .toUpperCase() ??
+                    'U',
+                style:
+                    TextStyle(color: Theme.of(context).colorScheme.onPrimary),
               ),
             ),
           ),
@@ -252,7 +261,8 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Meals', style: Theme.of(context).textTheme.titleLarge),
+                    Text('Meals',
+                        style: Theme.of(context).textTheme.titleLarge),
                     const SizedBox(height: 16),
                     _buildMealRow('Breakfast', _breakfastCaloriesController),
                     const SizedBox(height: 12),
@@ -272,7 +282,8 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Exercise', style: Theme.of(context).textTheme.titleLarge),
+                    Text('Exercise',
+                        style: Theme.of(context).textTheme.titleLarge),
                     const SizedBox(height: 16),
                     _buildCustomTextField(
                       controller: _exerciseCaloriesController,
@@ -289,7 +300,8 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Weight', style: Theme.of(context).textTheme.titleLarge),
+                    Text('Weight',
+                        style: Theme.of(context).textTheme.titleLarge),
                     const SizedBox(height: 16),
                     _buildCustomTextField(
                       controller: _weightController,
@@ -312,7 +324,11 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
     );
   }
 
-  Widget _buildSectionCard({required IconData icon, required Color iconColor, required String title, required Widget child}) {
+  Widget _buildSectionCard(
+      {required IconData icon,
+      required Color iconColor,
+      required String title,
+      required Widget child}) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -335,7 +351,10 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
               const SizedBox(width: 8),
               Text(
                 title,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                style: Theme.of(context)
+                    .textTheme
+                    .titleMedium
+                    ?.copyWith(fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -368,8 +387,9 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
                   Text(
                     DateFormat('EEE, MMM d, y').format(_selectedDate),
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
-                    ),
+                          color:
+                              Theme.of(context).colorScheme.onPrimaryContainer,
+                        ),
                   ),
                   const SizedBox(width: 8),
                   Icon(
@@ -390,7 +410,8 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
     );
   }
 
-  Widget _buildMealRow(String mealName, TextEditingController caloriesController) {
+  Widget _buildMealRow(
+      String mealName, TextEditingController caloriesController) {
     return Row(
       children: [
         SizedBox(
@@ -411,7 +432,8 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
     );
   }
 
-  Widget _buildCustomTextField({required TextEditingController controller, required String labelText}) {
+  Widget _buildCustomTextField(
+      {required TextEditingController controller, required String labelText}) {
     return TextFormField(
       controller: controller,
       keyboardType: TextInputType.number,
@@ -429,4 +451,4 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
       },
     );
   }
-} 
+}

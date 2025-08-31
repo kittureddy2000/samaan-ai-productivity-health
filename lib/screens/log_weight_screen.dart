@@ -66,7 +66,7 @@ class _LogWeightScreenState extends State<LogWeightScreen> {
         actions: [
           TextButton(
             onPressed: _isLoading ? null : _saveWeight,
-            child: _isLoading 
+            child: _isLoading
                 ? const SizedBox(
                     width: 16,
                     height: 16,
@@ -97,16 +97,17 @@ class _LogWeightScreenState extends State<LogWeightScreen> {
                       const SizedBox(height: 16),
                       Text(
                         'Update Your Weight',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style:
+                            Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         'Track your progress by logging your current weight',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey[600],
-                        ),
+                              color: Colors.grey[600],
+                            ),
                         textAlign: TextAlign.center,
                       ),
                     ],
@@ -124,29 +125,33 @@ class _LogWeightScreenState extends State<LogWeightScreen> {
                       Text(
                         'Current Weight',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.indigo,
-                        ),
+                              fontWeight: FontWeight.bold,
+                              color: Colors.indigo,
+                            ),
                       ),
                       const SizedBox(height: 24),
-                      
+
                       // Weight Field
                       TextFormField(
                         controller: _weightController,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
                         decoration: InputDecoration(
                           labelText: 'Weight',
                           hintText: 'e.g., 70.5',
-                          prefixIcon: const Icon(Icons.monitor_weight, color: Colors.indigo),
+                          prefixIcon: const Icon(Icons.monitor_weight,
+                              color: Colors.indigo),
                           border: const OutlineInputBorder(),
                           suffixText: 'kg',
                           focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: Colors.indigo, width: 2),
+                            borderSide:
+                                BorderSide(color: Colors.indigo, width: 2),
                           ),
                         ),
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style:
+                            Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                         textAlign: TextAlign.center,
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
@@ -164,9 +169,10 @@ class _LogWeightScreenState extends State<LogWeightScreen> {
                       // Quick Weight Buttons
                       Text(
                         'Quick Adjust',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w500,
-                        ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w500,
+                                ),
                       ),
                       const SizedBox(height: 12),
                       Row(
@@ -201,10 +207,13 @@ class _LogWeightScreenState extends State<LogWeightScreen> {
                           const SizedBox(width: 8),
                           Text(
                             'Weight Tracking Tips',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blue,
-                            ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue,
+                                ),
                           ),
                         ],
                       ),
@@ -212,7 +221,8 @@ class _LogWeightScreenState extends State<LogWeightScreen> {
                       _buildTip('Weigh yourself at the same time each day'),
                       _buildTip('Use the same scale consistently'),
                       _buildTip('Weigh yourself after using the bathroom'),
-                      _buildTip('Track trends over time, not daily fluctuations'),
+                      _buildTip(
+                          'Track trends over time, not daily fluctuations'),
                     ],
                   ),
                 ),
@@ -281,12 +291,12 @@ class _LogWeightScreenState extends State<LogWeightScreen> {
             child: Text(
               tip,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.blue.shade700,
-              ),
+                    color: Colors.blue.shade700,
+                  ),
             ),
           ),
         ],
       ),
     );
   }
-} 
+}

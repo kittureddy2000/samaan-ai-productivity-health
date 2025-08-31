@@ -18,7 +18,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _isLoading = true;
   bool _isEditing = false;
   bool _dailyReminderEnabled = true;
-  
+
   final _formKey = GlobalKey<FormState>();
   final _heightController = TextEditingController();
   final _weightController = TextEditingController();
@@ -47,14 +47,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
 
     try {
-      final profile = await context.read<FirebaseService>().getUserProfile(user.uid);
-      
+      final profile =
+          await context.read<FirebaseService>().getUserProfile(user.uid);
+
       // Sync profile picture if it's missing or different from Firebase Auth
       if (user.photoURL != null && user.photoURL != profile?.photoURL) {
         try {
           await context.read<FirebaseService>().syncProfilePicture(user.uid);
           // Reload profile to get updated photo URL
-          final updatedProfile = await context.read<FirebaseService>().getUserProfile(user.uid);
+          final updatedProfile =
+              await context.read<FirebaseService>().getUserProfile(user.uid);
           setState(() {
             _userProfile = updatedProfile;
             if (updatedProfile != null) {
@@ -66,7 +68,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           });
         } catch (syncError) {
           // If sync fails, continue with original profile
-          print('Profile picture sync failed, using original profile: $syncError');
+          print(
+              'Profile picture sync failed, using original profile: $syncError');
           setState(() {
             _userProfile = profile;
             if (profile != null) {
@@ -107,7 +110,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _selectDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: _selectedDate ?? DateTime.now().subtract(const Duration(days: 365 * 25)),
+      initialDate: _selectedDate ??
+          DateTime.now().subtract(const Duration(days: 365 * 25)),
       firstDate: DateTime.now().subtract(const Duration(days: 365 * 100)),
       lastDate: DateTime.now().subtract(const Duration(days: 365 * 13)),
       helpText: 'Select your date of birth',
@@ -138,7 +142,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     try {
       final user = context.read<AuthService>().currentUser;
-      if (user == null || _userProfile == null) throw Exception('User not authenticated');
+      if (user == null || _userProfile == null)
+        throw Exception('User not authenticated');
 
       final updatedProfile = _userProfile!.copyWith(
         height: double.parse(_heightController.text),
@@ -188,13 +193,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Reset All Data'),
-          content: const Text(
-            'This will permanently delete:\n'
-            '• Your profile\n'
-            '• All daily entries\n'
-            '• Weight loss goals\n\n'
-            'This action cannot be undone. Are you sure?'
-          ),
+          content: const Text('This will permanently delete:\n'
+              '• Your profile\n'
+              '• All daily entries\n'
+              '• Weight loss goals\n\n'
+              'This action cannot be undone. Are you sure?'),
           actions: <Widget>[
             TextButton(
               child: const Text('Cancel'),
@@ -203,7 +206,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               },
             ),
             TextButton(
-              child: const Text('Delete All', style: TextStyle(color: Colors.red)),
+              child:
+                  const Text('Delete All', style: TextStyle(color: Colors.red)),
               onPressed: () async {
                 Navigator.of(context).pop();
                 await _resetAllData();
@@ -222,16 +226,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     try {
       await context.read<FirebaseService>().deleteAllUserData();
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('All data deleted successfully! Please restart the app.'),
+            content:
+                Text('All data deleted successfully! Please restart the app.'),
             backgroundColor: Colors.green,
             duration: const Duration(seconds: 3),
           ),
         );
-        
+
         // Sign out to force profile recreation
         context.read<AuthService>().signOut();
       }
@@ -261,16 +266,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
           title: const Text('Privacy Policy'),
           content: const SingleChildScrollView(
             child: Text(
-              'This app collects and processes personal health data including:\n\n'
-              '• Account information (email, name)\n'
-              '• Health metrics (weight, height, age)\n'
-              '• Activity data (food intake, exercise)\n'
-              '• Goal tracking information\n\n'
-              'Your data is securely stored using Firebase and encrypted in transit and at rest. '
-              'We do not sell or share your personal information with third parties without consent.\n\n'
-              'You have the right to access, correct, or delete your data at any time through the app settings.\n\n'
-              'For the complete privacy policy, visit: [Your Privacy Policy URL]'
-            ),
+                'This app collects and processes personal health data including:\n\n'
+                '• Account information (email, name)\n'
+                '• Health metrics (weight, height, age)\n'
+                '• Activity data (food intake, exercise)\n'
+                '• Goal tracking information\n\n'
+                'Your data is securely stored using Firebase and encrypted in transit and at rest. '
+                'We do not sell or share your personal information with third parties without consent.\n\n'
+                'You have the right to access, correct, or delete your data at any time through the app settings.\n\n'
+                'For the complete privacy policy, visit: [Your Privacy Policy URL]'),
           ),
           actions: [
             TextButton(
@@ -288,7 +292,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final user = context.read<AuthService>().currentUser;
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profile'),
@@ -345,7 +349,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildProfileView() {
     final profile = _userProfile!;
     final user = context.read<AuthService>().currentUser;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -361,15 +365,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Text(
           profile.displayName ?? user?.email ?? 'Unknown User',
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+                fontWeight: FontWeight.bold,
+              ),
         ),
         const SizedBox(height: 8),
         Text(
           profile.email,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
         ),
         const SizedBox(height: 32),
 
@@ -378,11 +382,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: SwitchListTile(
             value: _dailyReminderEnabled,
             title: const Text('Daily Morning Reminder'),
-            subtitle: const Text('Get a reminder every morning to log your day'),
+            subtitle:
+                const Text('Get a reminder every morning to log your day'),
             onChanged: (val) async {
               setState(() => _dailyReminderEnabled = val);
               if (val) {
-                await NotificationService.instance.scheduleDailyMorning(hour: 8, minute: 0);
+                await NotificationService.instance
+                    .scheduleDailyMorning(hour: 8, minute: 0);
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Daily reminder scheduled')),
@@ -404,17 +410,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
         // Profile Details Cards
         _buildDetailCard('Age', '${profile.age} years', Icons.cake),
         const SizedBox(height: 16),
-        _buildDetailCard('Height', '${profile.height.toStringAsFixed(0)} cm', Icons.height),
+        _buildDetailCard(
+            'Height', '${profile.height.toStringAsFixed(0)} cm', Icons.height),
         const SizedBox(height: 16),
-        _buildDetailCard('Weight', '${profile.weight.toStringAsFixed(1)} lbs', Icons.monitor_weight),
+        _buildDetailCard('Weight', '${profile.weight.toStringAsFixed(1)} lbs',
+            Icons.monitor_weight),
         const SizedBox(height: 16),
-        _buildDetailCard('Gender', profile.gender.toUpperCase(), 
+        _buildDetailCard('Gender', profile.gender.toUpperCase(),
             profile.gender == 'male' ? Icons.man : Icons.woman),
         const SizedBox(height: 16),
-        _buildDetailCard('Date of Birth', 
-            '${profile.dateOfBirth.day}/${profile.dateOfBirth.month}/${profile.dateOfBirth.year}', 
+        _buildDetailCard(
+            'Date of Birth',
+            '${profile.dateOfBirth.day}/${profile.dateOfBirth.month}/${profile.dateOfBirth.year}',
             Icons.calendar_today),
-        
+
         const SizedBox(height: 32),
 
         // BMR Info Card
@@ -430,31 +439,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.local_fire_department, color: Theme.of(context).colorScheme.primary),
+                          Icon(Icons.local_fire_department,
+                              color: Theme.of(context).colorScheme.primary),
                           const SizedBox(width: 8),
                           Text(
                             'Basal Metabolic Rate (BMR)',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 8),
                       Text(
                         '${snapshot.data!.round()} calories/day',
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         'This is the number of calories your body burns at rest',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            ),
                         textAlign: TextAlign.center,
                       ),
                     ],
@@ -474,9 +492,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     // 1. Firebase Auth photoURL (most current)
     // 2. Stored profile photoURL (backup)
     // 3. Default icon
-    
+
     String? imageUrl = user?.photoURL ?? _userProfile?.photoURL;
-    
+
     if (imageUrl != null && imageUrl.isNotEmpty) {
       return ClipOval(
         child: Image.network(
@@ -498,7 +516,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             return Center(
               child: CircularProgressIndicator(
                 value: loadingProgress.expectedTotalBytes != null
-                    ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                    ? loadingProgress.cumulativeBytesLoaded /
+                        loadingProgress.expectedTotalBytes!
                     : null,
               ),
             );
@@ -559,10 +578,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             keyboardType: TextInputType.number,
             decoration: InputDecoration(
               labelText: 'Height (cm)',
-              prefixIcon: Icon(Icons.height, color: Theme.of(context).colorScheme.onSurfaceVariant),
+              prefixIcon: Icon(Icons.height,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant),
               border: const OutlineInputBorder(),
               suffixText: 'cm',
-              suffixStyle: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+              suffixStyle: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant),
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -583,10 +604,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             keyboardType: TextInputType.number,
             decoration: InputDecoration(
               labelText: 'Weight (lbs)',
-              prefixIcon: Icon(Icons.monitor_weight, color: Theme.of(context).colorScheme.onSurfaceVariant),
+              prefixIcon: Icon(Icons.monitor_weight,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant),
               border: const OutlineInputBorder(),
               suffixText: 'lbs',
-              suffixStyle: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+              suffixStyle: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant),
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -618,10 +641,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
                     style: TextStyle(
                       fontSize: 16,
-                      color: _selectedDate == null ? Theme.of(context).colorScheme.onSurfaceVariant : Theme.of(context).colorScheme.onSurface,
+                      color: _selectedDate == null
+                          ? Theme.of(context).colorScheme.onSurfaceVariant
+                          : Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
-                  Icon(Icons.arrow_drop_down, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                  Icon(Icons.arrow_drop_down,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant),
                 ],
               ),
             ),
@@ -687,4 +713,4 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
-} 
+}

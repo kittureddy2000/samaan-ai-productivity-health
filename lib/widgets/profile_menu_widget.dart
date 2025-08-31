@@ -11,7 +11,7 @@ class ProfileMenuWidget extends StatelessWidget {
 
   void _showProfileMenu(BuildContext context) {
     final user = context.read<AuthService>().currentUser;
-    
+
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -24,18 +24,20 @@ class ProfileMenuWidget extends StatelessWidget {
           children: [
             // Profile header with picture
             FutureBuilder<UserProfile?>(
-              future: user != null 
+              future: user != null
                   ? context.read<FirebaseService>().getUserProfile(user!.uid)
                   : Future.value(null),
               builder: (context, snapshot) {
                 final profile = snapshot.data;
                 final photoURL = user?.photoURL ?? profile?.photoURL;
-                
+
                 return Container(
                   width: 60,
                   height: 60,
                   decoration: BoxDecoration(
-                    color: photoURL != null ? Colors.transparent : Theme.of(context).colorScheme.primaryContainer,
+                    color: photoURL != null
+                        ? Colors.transparent
+                        : Theme.of(context).colorScheme.primaryContainer,
                     shape: BoxShape.circle,
                   ),
                   child: photoURL != null && photoURL.isNotEmpty
@@ -66,11 +68,11 @@ class ProfileMenuWidget extends StatelessWidget {
             Text(
               context.read<AuthService>().currentUser?.email ?? 'User',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             const SizedBox(height: 20),
-            
+
             // Profile options
             ListTile(
               leading: const Icon(Icons.person_outline),
@@ -80,14 +82,17 @@ class ProfileMenuWidget extends StatelessWidget {
                 Navigator.pop(context);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => const ProfileScreen()),
                 );
               },
             ),
             const Divider(),
             ListTile(
-              leading: Icon(Icons.logout, color: Theme.of(context).colorScheme.error),
-              title: Text('Sign Out', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+              leading: Icon(Icons.logout,
+                  color: Theme.of(context).colorScheme.error),
+              title: Text('Sign Out',
+                  style: TextStyle(color: Theme.of(context).colorScheme.error)),
               onTap: () {
                 Navigator.pop(context);
                 context.read<AuthService>().signOut();
@@ -103,26 +108,27 @@ class ProfileMenuWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthService>().currentUser;
-    
+
     return Padding(
       padding: const EdgeInsets.only(right: 8.0),
       child: GestureDetector(
         onTap: () => _showProfileMenu(context),
         child: FutureBuilder<UserProfile?>(
-          future: user != null 
+          future: user != null
               ? context.read<FirebaseService>().getUserProfile(user!.uid)
               : Future.value(null),
           builder: (context, snapshot) {
             final profile = snapshot.data;
             final photoURL = user?.photoURL ?? profile?.photoURL;
-            
+
             return PopupMenuButton<String>(
               onSelected: (value) {
                 switch (value) {
                   case 'profile':
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                      MaterialPageRoute(
+                          builder: (context) => const ProfileScreen()),
                     );
                     break;
                   case 'signOut':
@@ -142,21 +148,26 @@ class ProfileMenuWidget extends StatelessWidget {
                 PopupMenuItem<String>(
                   value: 'signOut',
                   child: ListTile(
-                    leading: Icon(Icons.logout, color: Theme.of(context).colorScheme.error),
-                    title: Text('Sign Out', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                    leading: Icon(Icons.logout,
+                        color: Theme.of(context).colorScheme.error),
+                    title: Text('Sign Out',
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.error)),
                   ),
                 ),
               ],
               child: CircleAvatar(
                 radius: 20,
-                backgroundImage: photoURL != null ? NetworkImage(photoURL) : null,
+                backgroundImage:
+                    photoURL != null ? NetworkImage(photoURL) : null,
                 backgroundColor: Theme.of(context).colorScheme.primaryContainer,
                 child: photoURL == null
                     ? Text(
                         user?.email?.substring(0, 1).toUpperCase() ?? 'U',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.onPrimaryContainer,
+                          color:
+                              Theme.of(context).colorScheme.onPrimaryContainer,
                         ),
                       )
                     : null,

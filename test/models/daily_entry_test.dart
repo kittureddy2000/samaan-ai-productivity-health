@@ -18,8 +18,10 @@ void main() {
           FoodEntry(name: 'Banana', calories: 105.0),
         ],
         exerciseEntries: [
-          ExerciseEntry(name: 'Running', durationMinutes: 30, caloriesBurned: 300.0),
-          ExerciseEntry(name: 'Walking', durationMinutes: 60, caloriesBurned: 200.0),
+          ExerciseEntry(
+              name: 'Running', durationMinutes: 30, caloriesBurned: 300.0),
+          ExerciseEntry(
+              name: 'Walking', durationMinutes: 60, caloriesBurned: 200.0),
         ],
         weight: 70.0,
         createdAt: testCreatedAt,
@@ -43,7 +45,8 @@ void main() {
           date: testDate,
           foodEntries: [],
           exerciseEntries: [
-            ExerciseEntry(name: 'Running', durationMinutes: 30, caloriesBurned: 300.0),
+            ExerciseEntry(
+                name: 'Running', durationMinutes: 30, caloriesBurned: 300.0),
           ],
           createdAt: testCreatedAt,
           updatedAt: testUpdatedAt,

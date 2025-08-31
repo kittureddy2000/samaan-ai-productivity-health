@@ -15,16 +15,17 @@ class ReportsScreen extends StatefulWidget {
   State<ReportsScreen> createState() => _ReportsScreenState();
 }
 
-class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserver {
+class _ReportsScreenState extends State<ReportsScreen>
+    with WidgetsBindingObserver {
   String _selectedPeriod = 'weekly';
   String _selectedReportType = 'calories'; // 'calories', 'weight', or 'glasses'
   CalorieReport? _currentReport;
   bool _isLoading = false;
   double? _liveBMR; // Store live BMR calculation
-  
+
   // Navigation state for weekly reports
   DateTime _currentWeekStart = DateTime.now();
-  
+
   // Date selection for monthly/yearly reports
   DateTime _selectedMonth = DateTime.now();
   DateTime _selectedYear = DateTime.now();
@@ -36,13 +37,13 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
     _initializeDates();
     _loadReport();
   }
-  
+
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
-  
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
@@ -50,61 +51,66 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
       _loadReport();
     }
   }
-  
+
   // Public method to refresh reports (can be called from parent widgets)
   void refreshReports() {
     _loadReport();
   }
-  
+
   void _initializeDates() {
     final now = DateTime.now();
-    
+
     // Set current week start to last Wednesday
     _currentWeekStart = _getWeekStart(now);
     _selectedMonth = DateTime(now.year, now.month, 1);
     _selectedYear = DateTime(now.year, 1, 1);
   }
-  
+
   DateTime _getWeekStart(DateTime date) {
     // Find the Wednesday that starts the current week
     final dayOfWeek = date.weekday; // Monday = 1, Sunday = 7
     final daysFromWednesday = (dayOfWeek + 4) % 7; // Wednesday = 0
     return date.subtract(Duration(days: daysFromWednesday));
   }
-  
-  
-  CalorieReport _filterMonthlyDataForWeek(CalorieReport monthlyReport, DateTime weekStart) {
+
+  CalorieReport _filterMonthlyDataForWeek(
+      CalorieReport monthlyReport, DateTime weekStart) {
     final weekEnd = weekStart.add(const Duration(days: 6));
-    
-    Log.d('Filtering monthly data for week: ${weekStart.toString().split(' ')[0]} to ${weekEnd.toString().split(' ')[0]}');
+
+    Log.d(
+        'Filtering monthly data for week: ${weekStart.toString().split(' ')[0]} to ${weekEnd.toString().split(' ')[0]}');
     Log.d('Monthly report has ${monthlyReport.data.length} total entries');
-    
+
     // Filter monthly data for the specific week
     final weekData = monthlyReport.data.where((data) {
-      final entryDate = DateTime(data.date.year, data.date.month, data.date.day);
-      final weekStartDate = DateTime(weekStart.year, weekStart.month, weekStart.day);
+      final entryDate =
+          DateTime(data.date.year, data.date.month, data.date.day);
+      final weekStartDate =
+          DateTime(weekStart.year, weekStart.month, weekStart.day);
       final weekEndDate = DateTime(weekEnd.year, weekEnd.month, weekEnd.day);
-      
+
       final isInWeek = (entryDate.isAtSameMomentAs(weekStartDate) ||
-                       entryDate.isAtSameMomentAs(weekEndDate) ||
-                       (entryDate.isAfter(weekStartDate) && entryDate.isBefore(weekEndDate.add(const Duration(days: 1)))));
-      
+          entryDate.isAtSameMomentAs(weekEndDate) ||
+          (entryDate.isAfter(weekStartDate) &&
+              entryDate.isBefore(weekEndDate.add(const Duration(days: 1)))));
+
       if (isInWeek) {
-        Log.d('week data ${entryDate.toString().split(' ')[0]}: ${data.caloriesConsumed}');
+        Log.d(
+            'week data ${entryDate.toString().split(' ')[0]}: ${data.caloriesConsumed}');
       }
-      
+
       return isInWeek;
     }).toList();
-    
+
     Log.d('Found ${weekData.length} entries for this week');
-    
+
     // Recalculate totals for the week
     double totalCaloriesConsumed = 0;
     double totalCaloriesBurned = 0;
     double totalNetDeficit = 0;
     double totalBMR = 0;
     double totalGlasses = 0;
-    
+
     for (final entry in weekData) {
       totalCaloriesConsumed += entry.caloriesConsumed;
       totalCaloriesBurned += entry.caloriesBurned;
@@ -112,10 +118,13 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
       totalBMR += entry.bmr;
       totalGlasses += entry.glasses ?? 0;
     }
-    
-    final averageBMR = weekData.isNotEmpty ? totalBMR / weekData.length : monthlyReport.averageBMR;
-    final averageGlasses = weekData.isNotEmpty ? totalGlasses / weekData.length : 0.0;
-    
+
+    final averageBMR = weekData.isNotEmpty
+        ? totalBMR / weekData.length
+        : monthlyReport.averageBMR;
+    final averageGlasses =
+        weekData.isNotEmpty ? totalGlasses / weekData.length : 0.0;
+
     return CalorieReport(
       period: 'weekly',
       startDate: weekStart,
@@ -142,35 +151,37 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
 
     try {
       CalorieReport report;
-      
+
       // For now, let's use a simpler approach - get monthly data and filter it
       if (_selectedPeriod == 'weekly') {
         // Get current month data and filter for the specific week
-        final monthlyReport = await context.read<FirebaseService>().generateCalorieReport(
-          user.uid,
-          'monthly',
-        );
+        final monthlyReport =
+            await context.read<FirebaseService>().generateCalorieReport(
+                  user.uid,
+                  'monthly',
+                );
         report = _filterMonthlyDataForWeek(monthlyReport, _currentWeekStart);
       } else {
         // For monthly/yearly, use the original method
         report = await context.read<FirebaseService>().generateCalorieReport(
-          user.uid,
-          _selectedPeriod,
-        );
+              user.uid,
+              _selectedPeriod,
+            );
       }
-      
+
       // Get live BMR calculation (correct value)
-      final liveBMR = await context.read<FirebaseService>().calculateBMR(user.uid);
-      
+      final liveBMR =
+          await context.read<FirebaseService>().calculateBMR(user.uid);
+
       // Additional validation of the report data
-      if (report.data.any((data) => 
-          data.bmr.isNaN || 
-          data.caloriesConsumed.isNaN || 
-          data.caloriesBurned.isNaN || 
+      if (report.data.any((data) =>
+          data.bmr.isNaN ||
+          data.caloriesConsumed.isNaN ||
+          data.caloriesBurned.isNaN ||
           data.netCalorieDeficit.isNaN)) {
         throw Exception('Report contains invalid numeric data');
       }
-      
+
       setState(() {
         _currentReport = report;
         _liveBMR = liveBMR;
@@ -185,7 +196,7 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
             duration: const Duration(seconds: 5),
           ),
         );
-        
+
         // Set to null to show error state
         setState(() {
           _currentReport = null;
@@ -197,30 +208,31 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
       });
     }
   }
-  
+
   void _goToPreviousWeek() {
     setState(() {
       _currentWeekStart = _currentWeekStart.subtract(const Duration(days: 7));
     });
     _loadReport();
   }
-  
+
   void _goToNextWeek() {
     setState(() {
       _currentWeekStart = _currentWeekStart.add(const Duration(days: 7));
     });
     _loadReport();
   }
-  
+
   void _selectMonth() async {
     final selectedDate = await showDatePicker(
       context: context,
       initialDate: _selectedMonth,
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
-      selectableDayPredicate: (date) => date.day == 1, // Only allow first day of month
+      selectableDayPredicate: (date) =>
+          date.day == 1, // Only allow first day of month
     );
-    
+
     if (selectedDate != null) {
       setState(() {
         _selectedMonth = DateTime(selectedDate.year, selectedDate.month, 1);
@@ -228,14 +240,15 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
       _loadReport();
     }
   }
-  
+
   void _prevMonth() {
     setState(() {
-      _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month - 1, 1);
+      _selectedMonth =
+          DateTime(_selectedMonth.year, _selectedMonth.month - 1, 1);
     });
     _loadReport();
   }
-  
+
   void _nextMonth() {
     final next = DateTime(_selectedMonth.year, _selectedMonth.month + 1, 1);
     final nowStart = DateTime(DateTime.now().year, DateTime.now().month, 1);
@@ -246,16 +259,17 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
       _loadReport();
     }
   }
-  
+
   void _selectYear() async {
     final selectedDate = await showDatePicker(
       context: context,
       initialDate: _selectedYear,
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
-      selectableDayPredicate: (date) => date.month == 1 && date.day == 1, // Only allow Jan 1st
+      selectableDayPredicate: (date) =>
+          date.month == 1 && date.day == 1, // Only allow Jan 1st
     );
-    
+
     if (selectedDate != null) {
       setState(() {
         _selectedYear = DateTime(selectedDate.year, 1, 1);
@@ -270,7 +284,7 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
     } else if (_selectedReportType == 'glasses') {
       return 'Water Intake Progress - ${_selectedYear.year}';
     }
-    
+
     switch (_selectedPeriod) {
       case 'weekly':
         final endDate = _currentWeekStart.add(const Duration(days: 6));
@@ -283,14 +297,14 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
         return 'Calorie Tracking';
     }
   }
-  
+
   String _getChartDescription() {
     if (_selectedReportType == 'weight') {
       return 'Track your weight changes over time. Only shows days with recorded weight.';
     } else if (_selectedReportType == 'glasses') {
       return 'Track your daily water intake over time. Only shows days with recorded water intake.';
     }
-    
+
     switch (_selectedPeriod) {
       case 'weekly':
         return 'Weekly view (Wednesday to Tuesday): Blue bars show calories consumed, green/red bars show net deficit (positive = good for weight loss)';
@@ -308,7 +322,11 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        title: Text(_selectedReportType == 'calories' ? 'Calorie Reports' : _selectedReportType == 'weight' ? 'Weight Reports' : 'Water Intake Reports'),
+        title: Text(_selectedReportType == 'calories'
+            ? 'Calorie Reports'
+            : _selectedReportType == 'weight'
+                ? 'Weight Reports'
+                : 'Water Intake Reports'),
         backgroundColor: Theme.of(context).colorScheme.surface,
         elevation: 1,
         shadowColor: Colors.black.withOpacity(0.1),
@@ -346,7 +364,10 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
           children: [
             Text(
               'Report Options',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(context)
+                  .textTheme
+                  .titleLarge
+                  ?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             _buildFilterRow(
@@ -383,7 +404,8 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
     );
   }
 
-  Widget _buildFilterRow(String title, List<String> options, String selectedValue, ValueChanged<String> onSelected) {
+  Widget _buildFilterRow(String title, List<String> options,
+      String selectedValue, ValueChanged<String> onSelected) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -406,14 +428,14 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
                 backgroundColor: Theme.of(context).colorScheme.surface,
                 selectedColor: Theme.of(context).colorScheme.primaryContainer,
                 labelStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: isSelected 
-                      ? Theme.of(context).colorScheme.onPrimaryContainer
-                      : Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+                      color: isSelected
+                          ? Theme.of(context).colorScheme.onPrimaryContainer
+                          : Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                   side: BorderSide(
-                    color: isSelected 
+                    color: isSelected
                         ? Theme.of(context).colorScheme.primary
                         : Theme.of(context).colorScheme.outlineVariant,
                   ),
@@ -444,15 +466,15 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
               Text(
                 'No Data Available',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Start logging your food and exercise to see reports',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey[600],
-                ),
+                      color: Colors.grey[600],
+                    ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
@@ -469,7 +491,7 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
 
   Widget _buildReportContent() {
     final report = _currentReport!;
-    
+
     return RefreshIndicator(
       onRefresh: _loadReport,
       child: ListView(
@@ -591,12 +613,15 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
   }
 
   Widget _buildGlassesSummaryCards(CalorieReport report) {
-    final glassesData = report.data.where((data) => data.glasses != null && data.glasses! > 0);
-    final totalGlasses = glassesData.fold(0.0, (sum, data) => sum + data.glasses!);
-    final averageGlasses = glassesData.isNotEmpty ? totalGlasses / glassesData.length : 0.0;
+    final glassesData =
+        report.data.where((data) => data.glasses != null && data.glasses! > 0);
+    final totalGlasses =
+        glassesData.fold(0.0, (sum, data) => sum + data.glasses!);
+    final averageGlasses =
+        glassesData.isNotEmpty ? totalGlasses / glassesData.length : 0.0;
     final daysWithGlasses = glassesData.length;
     final goalAchieved = glassesData.where((data) => data.glasses! >= 8).length;
-    
+
     return Column(
       children: [
         Row(
@@ -715,24 +740,36 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
       ..sort((a, b) => a.date.compareTo(b.date));
 
     final spots = <BarChartGroupData>[];
-    
+
     if (_selectedPeriod == 'weekly') {
       // For weekly reports, group by day of week
       final weekData = <int, CalorieReportData>{};
-      
+
       for (final data in sortedData) {
         final dayOfWeek = data.date.weekday; // Monday = 1, Sunday = 7
         // Map to Wednesday-based week: Wed=1, Thu=2, Fri=3, Sat=4, Sun=5, Mon=6, Tue=7
-        final wednesdayBasedDay = dayOfWeek == 3 ? 1 : // Wednesday -> 1
-                                 dayOfWeek == 4 ? 2 : // Thursday -> 2
-                                 dayOfWeek == 5 ? 3 : // Friday -> 3
-                                 dayOfWeek == 6 ? 4 : // Saturday -> 4
-                                 dayOfWeek == 7 ? 5 : // Sunday -> 5
-                                 dayOfWeek == 1 ? 6 : // Monday -> 6
-                                 7; // Tuesday -> 7
+        final wednesdayBasedDay = dayOfWeek == 3
+            ? 1
+            : // Wednesday -> 1
+            dayOfWeek == 4
+                ? 2
+                : // Thursday -> 2
+                dayOfWeek == 5
+                    ? 3
+                    : // Friday -> 3
+                    dayOfWeek == 6
+                        ? 4
+                        : // Saturday -> 4
+                        dayOfWeek == 7
+                            ? 5
+                            : // Sunday -> 5
+                            dayOfWeek == 1
+                                ? 6
+                                : // Monday -> 6
+                                7; // Tuesday -> 7
         weekData[wednesdayBasedDay] = data;
       }
-      
+
       // Create bars for each day of the week (1-7, where 1=Wednesday)
       for (int day = 1; day <= 7; day++) {
         final data = weekData[day];
@@ -751,7 +788,8 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
                 // Net deficit bar (green/red)
                 BarChartRodData(
                   toY: data.netCalorieDeficit.abs(),
-                  color: data.netCalorieDeficit >= 0 ? Colors.green : Colors.red,
+                  color:
+                      data.netCalorieDeficit >= 0 ? Colors.green : Colors.red,
                   width: 15,
                   borderRadius: BorderRadius.circular(2),
                 ),
@@ -787,10 +825,13 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
         final int month = _selectedMonth.month;
         final int daysInMonth = DateTime(year, month + 1, 0).day;
 
-        final Map<int, double> dayToNet = {for (var d = 1; d <= daysInMonth; d++) d: 0.0};
+        final Map<int, double> dayToNet = {
+          for (var d = 1; d <= daysInMonth; d++) d: 0.0
+        };
         for (final d in sortedData) {
           if (d.date.year == year && d.date.month == month) {
-            dayToNet[d.date.day] = (dayToNet[d.date.day] ?? 0) + d.netCalorieDeficit;
+            dayToNet[d.date.day] =
+                (dayToNet[d.date.day] ?? 0) + d.netCalorieDeficit;
           }
         }
 
@@ -812,9 +853,12 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
         }
       } else {
         // Yearly: group by month and show 12 bars (Jan..Dec)
-        final Map<int, double> monthToNet = {for (var m = 1; m <= 12; m++) m: 0.0};
+        final Map<int, double> monthToNet = {
+          for (var m = 1; m <= 12; m++) m: 0.0
+        };
         for (final d in sortedData) {
-          monthToNet[d.date.month] = (monthToNet[d.date.month] ?? 0) + d.netCalorieDeficit;
+          monthToNet[d.date.month] =
+              (monthToNet[d.date.month] ?? 0) + d.netCalorieDeficit;
         }
         for (int m = 1; m <= 12; m++) {
           final sum = monthToNet[m] ?? 0.0;
@@ -838,13 +882,15 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
     // Calculate max Y value
     double maxY = 100;
     double minY = 0;
-    
+
     if (sortedData.isNotEmpty) {
-      final allValues = sortedData.expand((data) => [
-        data.caloriesConsumed,
-        data.netCalorieDeficit.abs(),
-      ]).toList();
-      
+      final allValues = sortedData
+          .expand((data) => [
+                data.caloriesConsumed,
+                data.netCalorieDeficit.abs(),
+              ])
+          .toList();
+
       maxY = (allValues.reduce((a, b) => a > b ? a : b)).abs() + 200;
       // Keep baseline at 0 for monthly/yearly to avoid a gap at X axis
       minY = 0;
@@ -864,7 +910,7 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
           ),
           const SizedBox(height: 16),
         ],
-        
+
         Expanded(
           child: BarChart(
             BarChartData(
@@ -895,7 +941,16 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
                     getTitlesWidget: (value, meta) {
                       if (_selectedPeriod == 'weekly') {
                         // Show day names for weekly view (Wednesday to Tuesday)
-                        const dayNames = ['', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun', 'Mon', 'Tue'];
+                        const dayNames = [
+                          '',
+                          'Wed',
+                          'Thu',
+                          'Fri',
+                          'Sat',
+                          'Sun',
+                          'Mon',
+                          'Tue'
+                        ];
                         final index = value.toInt();
                         if (index >= 0 && index < dayNames.length) {
                           return Text(
@@ -910,7 +965,21 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
                         );
                       } else {
                         // Yearly: fixed month labels Jan..Dec
-                        const months = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                        const months = [
+                          '',
+                          'Jan',
+                          'Feb',
+                          'Mar',
+                          'Apr',
+                          'May',
+                          'Jun',
+                          'Jul',
+                          'Aug',
+                          'Sep',
+                          'Oct',
+                          'Nov',
+                          'Dec'
+                        ];
                         final idx = value.toInt();
                         if (idx >= 1 && idx <= 12) {
                           return Text(
@@ -923,8 +992,10 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
                     },
                   ),
                 ),
-                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                rightTitles:
+                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                topTitles:
+                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
               ),
               borderData: FlBorderData(show: false),
               gridData: FlGridData(
@@ -1016,8 +1087,10 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
               },
             ),
           ),
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
         ),
         borderData: FlBorderData(
           show: true,
@@ -1035,7 +1108,8 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
             barWidth: 3,
             dotData: FlDotData(
               show: true,
-              getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
+              getDotPainter: (spot, percent, barData, index) =>
+                  FlDotCirclePainter(
                 radius: 4,
                 color: Colors.blue,
                 strokeWidth: 2,
@@ -1054,11 +1128,12 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
 
   Widget _buildGlassesChart(CalorieReport report) {
     // Debug logging
-    print('🚰 Building glasses chart with ${report.data.length} total data points');
+    print(
+        '🚰 Building glasses chart with ${report.data.length} total data points');
     for (final data in report.data) {
       print('🚰 Date: ${data.date}, Glasses: ${data.glasses}');
     }
-    
+
     // Filter data to only include entries with glasses
     final glassesData = report.data
         .where((data) => data.glasses != null && data.glasses! > 0)
@@ -1076,8 +1151,8 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
             SizedBox(height: 16),
             Text('No water intake data to display'),
             SizedBox(height: 8),
-            Text('Add glasses of water in your daily log to see trends here', 
-                 style: TextStyle(color: Colors.grey)),
+            Text('Add glasses of water in your daily log to see trends here',
+                style: TextStyle(color: Colors.grey)),
           ],
         ),
       );
@@ -1144,8 +1219,10 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
               },
             ),
           ),
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
         ),
         borderData: FlBorderData(
           show: true,
@@ -1163,7 +1240,8 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
             barWidth: 3,
             dotData: FlDotData(
               show: true,
-              getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
+              getDotPainter: (spot, percent, barData, index) =>
+                  FlDotCirclePainter(
                 radius: 4,
                 color: Colors.cyan,
                 strokeWidth: 2,
@@ -1207,7 +1285,7 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
     } else if (_selectedReportType == 'glasses') {
       return _buildGlassesDataTable(report);
     }
-    
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: DataTable(
@@ -1230,7 +1308,8 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
                 Text(
                   '${data.netCalorieDeficit.round()}',
                   style: TextStyle(
-                    color: data.netCalorieDeficit >= 0 ? Colors.green : Colors.red,
+                    color:
+                        data.netCalorieDeficit >= 0 ? Colors.green : Colors.red,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -1262,16 +1341,18 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
           final data = entry.value;
           final prevWeight = index > 0 ? weightData[index - 1].weight : null;
           final change = prevWeight != null ? data.weight! - prevWeight : 0.0;
-          
+
           return DataRow(
             cells: [
               DataCell(Text(DateFormat('MMM dd').format(data.date))),
               DataCell(Text('${data.weight!.toStringAsFixed(1)} lbs')),
               DataCell(
                 Text(
-                  index > 0 ? '${change >= 0 ? '+' : ''}${change.toStringAsFixed(1)} lbs' : '-',
+                  index > 0
+                      ? '${change >= 0 ? '+' : ''}${change.toStringAsFixed(1)} lbs'
+                      : '-',
                   style: TextStyle(
-                    color: index > 0 
+                    color: index > 0
                         ? (change <= 0 ? Colors.green : Colors.red)
                         : Colors.grey,
                     fontWeight: FontWeight.bold,
@@ -1301,10 +1382,11 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
           DataColumn(label: Text('Goal Progress')),
         ],
         rows: glassesData.take(10).map((data) {
-          final goalProgress = data.glasses! / 8.0; // Assuming 8 glasses daily goal
+          final goalProgress =
+              data.glasses! / 8.0; // Assuming 8 glasses daily goal
           final progressText = '${(goalProgress * 100).toStringAsFixed(0)}%';
           final isOnTrack = goalProgress >= 1.0;
-          
+
           return DataRow(
             cells: [
               DataCell(Text(DateFormat('MMM dd').format(data.date))),
@@ -1324,4 +1406,4 @@ class _ReportsScreenState extends State<ReportsScreen> with WidgetsBindingObserv
       ),
     );
   }
-} 
+}

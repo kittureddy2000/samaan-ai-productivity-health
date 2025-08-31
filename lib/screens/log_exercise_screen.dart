@@ -39,8 +39,8 @@ class _LogExerciseScreenState extends State<LogExerciseScreen> {
         name: _nameController.text.trim(),
         caloriesBurned: double.parse(_caloriesController.text),
         durationMinutes: int.parse(_durationController.text),
-        description: _descriptionController.text.trim().isEmpty 
-            ? null 
+        description: _descriptionController.text.trim().isEmpty
+            ? null
             : _descriptionController.text.trim(),
       );
 
@@ -81,7 +81,7 @@ class _LogExerciseScreenState extends State<LogExerciseScreen> {
         actions: [
           TextButton(
             onPressed: _isLoading ? null : _saveExerciseEntry,
-            child: _isLoading 
+            child: _isLoading
                 ? const SizedBox(
                     width: 16,
                     height: 16,
@@ -113,15 +113,15 @@ class _LogExerciseScreenState extends State<LogExerciseScreen> {
                       Text(
                         'Add Exercise Entry',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                              fontWeight: FontWeight.bold,
+                            ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         'Log your workout activity',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey[600],
-                        ),
+                              color: Colors.grey[600],
+                            ),
                       ),
                     ],
                   ),
@@ -212,8 +212,8 @@ class _LogExerciseScreenState extends State<LogExerciseScreen> {
               Text(
                 'Quick Add',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
               const SizedBox(height: 12),
               Wrap(
@@ -271,4 +271,4 @@ class _LogExerciseScreenState extends State<LogExerciseScreen> {
       side: BorderSide(color: Colors.purple.withOpacity(0.3)),
     );
   }
-} 
+}

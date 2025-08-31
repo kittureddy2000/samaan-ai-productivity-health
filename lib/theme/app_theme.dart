@@ -62,7 +62,8 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: colorScheme.surface,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: colorScheme.outlineVariant),
@@ -76,7 +77,8 @@ class AppTheme {
           borderSide: BorderSide(color: colorScheme.primary, width: 1.6),
         ),
         labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
-        hintStyle: TextStyle(color: colorScheme.onSurfaceVariant.withOpacity(0.7)),
+        hintStyle:
+            TextStyle(color: colorScheme.onSurfaceVariant.withOpacity(0.7)),
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
@@ -140,7 +142,8 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: colorScheme.surface,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: colorScheme.outlineVariant),
@@ -154,7 +157,8 @@ class AppTheme {
           borderSide: BorderSide(color: colorScheme.primary, width: 1.6),
         ),
         labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
-        hintStyle: TextStyle(color: colorScheme.onSurfaceVariant.withOpacity(0.8)),
+        hintStyle:
+            TextStyle(color: colorScheme.onSurfaceVariant.withOpacity(0.8)),
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
@@ -168,5 +172,3 @@ class AppTheme {
     );
   }
 }
-
-

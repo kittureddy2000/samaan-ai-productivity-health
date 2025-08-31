@@ -36,8 +36,8 @@ class _LogFoodScreenState extends State<LogFoodScreen> {
       final foodEntry = FoodEntry(
         name: _nameController.text.trim(),
         calories: double.parse(_caloriesController.text),
-        description: _descriptionController.text.trim().isEmpty 
-            ? null 
+        description: _descriptionController.text.trim().isEmpty
+            ? null
             : _descriptionController.text.trim(),
       );
 
@@ -78,7 +78,7 @@ class _LogFoodScreenState extends State<LogFoodScreen> {
         actions: [
           TextButton(
             onPressed: _isLoading ? null : _saveFoodEntry,
-            child: _isLoading 
+            child: _isLoading
                 ? const SizedBox(
                     width: 16,
                     height: 16,
@@ -110,15 +110,15 @@ class _LogFoodScreenState extends State<LogFoodScreen> {
                       Text(
                         'Add Food Entry',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                              fontWeight: FontWeight.bold,
+                            ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         'Log what you ate today',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey[600],
-                        ),
+                              color: Colors.grey[600],
+                            ),
                       ),
                     ],
                   ),
@@ -185,8 +185,8 @@ class _LogFoodScreenState extends State<LogFoodScreen> {
               Text(
                 'Quick Add',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
               const SizedBox(height: 12),
               Wrap(
@@ -241,4 +241,4 @@ class _LogFoodScreenState extends State<LogFoodScreen> {
       side: BorderSide(color: Colors.orange.withOpacity(0.3)),
     );
   }
-} 
+}

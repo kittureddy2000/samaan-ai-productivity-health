@@ -21,13 +21,13 @@ void main() {
       await Firebase.initializeApp(
         options: FirebaseConfig.currentPlatform,
       );
-      
+
       final auth = FirebaseAuth.instance;
       final firestore = FirebaseFirestore.instance;
 
       authService = AuthService(auth: auth);
       firebaseService = FirebaseService(
-        auth: auth, 
+        auth: auth,
         firestore: firestore,
         httpClient: http.Client(),
       );
@@ -40,20 +40,25 @@ void main() {
 
       try {
         // Attempt to sign in. If it fails, the user might not exist, so we create it.
-        await authService.signInWithEmailAndPassword(email: testEmail, password: testPassword);
+        await authService.signInWithEmailAndPassword(
+            email: testEmail, password: testPassword);
       } catch (e) {
         // If sign-in fails, it's likely because the user doesn't exist.
         // Let's create the user for the test run.
-        await authService.registerWithEmailAndPassword(email: testEmail, password: testPassword);
+        await authService.registerWithEmailAndPassword(
+            email: testEmail, password: testPassword);
         // And sign in again
-        await authService.signInWithEmailAndPassword(email: testEmail, password: testPassword);
+        await authService.signInWithEmailAndPassword(
+            email: testEmail, password: testPassword);
       }
 
       // Ensure a user is signed in before running tests
-      expect(auth.currentUser, isNotNull, reason: "Test user could not be signed in.");
+      expect(auth.currentUser, isNotNull,
+          reason: "Test user could not be signed in.");
     });
 
-    testWidgets('successfully calls the live calculateBMR cloud function', (WidgetTester tester) async {
+    testWidgets('successfully calls the live calculateBMR cloud function',
+        (WidgetTester tester) async {
       // This test doesn't need to pump a widget, as it's testing a service.
       // We just need a host app to run on the device/emulator.
       await tester.pumpWidget(const MaterialApp(home: Scaffold()));

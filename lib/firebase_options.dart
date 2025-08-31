@@ -53,16 +53,20 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'YOUR_ANDROID_API_KEY_HERE', // You need to replace this from the Android app config in Firebase
-    appId: 'YOUR_ANDROID_APP_ID_HERE', // You need to replace this from the Android app config in Firebase
+    apiKey:
+        'YOUR_ANDROID_API_KEY_HERE', // You need to replace this from the Android app config in Firebase
+    appId:
+        'YOUR_ANDROID_APP_ID_HERE', // You need to replace this from the Android app config in Firebase
     messagingSenderId: '362525403590',
     projectId: 'samaan-ai-staging-2025',
     storageBucket: 'samaan-ai-staging-2025.appspot.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'YOUR_IOS_API_KEY_HERE', // You need to replace this from the iOS app config in Firebase
-    appId: 'YOUR_IOS_APP_ID_HERE', // You need to replace this from the iOS app config in Firebase
+    apiKey:
+        'YOUR_IOS_API_KEY_HERE', // You need to replace this from the iOS app config in Firebase
+    appId:
+        'YOUR_IOS_APP_ID_HERE', // You need to replace this from the iOS app config in Firebase
     messagingSenderId: '362525403590',
     projectId: 'samaan-ai-staging-2025',
     storageBucket: 'samaan-ai-staging-2025.appspot.com',
@@ -71,7 +75,8 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyAhGuF5F2ciYlz4_AVeInRgielpeMwWHzw',
-    appId: '1:362525403590:web:3110155a85fba0a0e36ac7', // macOS uses web credentials
+    appId:
+        '1:362525403590:web:3110155a85fba0a0e36ac7', // macOS uses web credentials
     messagingSenderId: '362525403590',
     projectId: 'samaan-ai-staging-2025',
     storageBucket: 'samaan-ai-staging-2025.appspot.com',

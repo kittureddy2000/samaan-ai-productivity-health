@@ -74,7 +74,8 @@ void main() {
         expect(firestoreData['uid'], equals('test_uid'));
         expect(firestoreData['email'], equals('test@example.com'));
         expect(firestoreData['displayName'], equals('Test User'));
-        expect(firestoreData['photoURL'], equals('https://example.com/photo.jpg'));
+        expect(
+            firestoreData['photoURL'], equals('https://example.com/photo.jpg'));
         expect(firestoreData['dateOfBirth'], isA<Timestamp>());
         expect(firestoreData['height'], equals(175.0));
         expect(firestoreData['weight'], equals(70.0));
@@ -87,7 +88,7 @@ void main() {
         // Create a fake Firestore document
         final fakeFirestore = FakeFirebaseFirestore();
         final docRef = fakeFirestore.collection('users').doc('test_uid');
-        
+
         await docRef.set({
           'uid': 'test_uid',
           'email': 'test@example.com',
@@ -119,7 +120,7 @@ void main() {
       test('fromFirestore handles missing optional fields', () async {
         final fakeFirestore = FakeFirebaseFirestore();
         final docRef = fakeFirestore.collection('users').doc('test_uid');
-        
+
         await docRef.set({
           'uid': 'test_uid',
           'email': 'test@example.com',

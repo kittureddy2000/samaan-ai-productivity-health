@@ -8,27 +8,33 @@ class NotificationService {
   NotificationService._();
   static final NotificationService instance = NotificationService._();
 
-  final FlutterLocalNotificationsPlugin _flnp = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _flnp =
+      FlutterLocalNotificationsPlugin();
 
   Future<void> initialize() async {
     if (kIsWeb) return; // Notifications not supported on web in this setup
     tz.initializeTimeZones();
 
-    const AndroidInitializationSettings androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const InitializationSettings initSettings = InitializationSettings(android: androidInit);
+    const AndroidInitializationSettings androidInit =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+    const InitializationSettings initSettings =
+        InitializationSettings(android: androidInit);
 
     await _flnp.initialize(initSettings);
 
     if (Platform.isAndroid) {
-      final androidPlugin = _flnp.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+      final androidPlugin = _flnp.resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>();
       await androidPlugin?.requestNotificationsPermission();
-      
+
       // Only request exact alarm permission if needed, and handle gracefully
       try {
-        final hasExactAlarmPermission = await androidPlugin?.areNotificationsEnabled() ?? false;
+        final hasExactAlarmPermission =
+            await androidPlugin?.areNotificationsEnabled() ?? false;
         if (!hasExactAlarmPermission) {
           // Don't block the app - just proceed without exact alarms
-          print('Exact alarm permission not granted - using approximate timing');
+          print(
+              'Exact alarm permission not granted - using approximate timing');
         }
       } catch (e) {
         // If exact alarm permission fails, continue without it
@@ -50,7 +56,8 @@ class NotificationService {
     );
 
     final now = tz.TZDateTime.now(tz.local);
-    var next = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
+    var next =
+        tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
     if (next.isBefore(now)) {
       next = next.add(const Duration(days: 1));
     }
@@ -62,7 +69,8 @@ class NotificationService {
       next,
       details,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time,
       payload: 'daily_morning',
     );
@@ -73,5 +81,3 @@ class NotificationService {
     await _flnp.cancel(1001);
   }
 }
-
-

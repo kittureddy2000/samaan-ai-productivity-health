@@ -39,7 +39,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
 
     try {
-      final summary = await context.read<FirebaseService>().getSummaryForDate(_selectedDate);
+      final summary = await context
+          .read<FirebaseService>()
+          .getSummaryForDate(_selectedDate);
       setState(() {
         _todaySummary = summary;
       });
@@ -76,8 +78,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _isToday() {
     final now = DateTime.now();
     return _selectedDate.year == now.year &&
-           _selectedDate.month == now.month &&
-           _selectedDate.day == now.day;
+        _selectedDate.month == now.month &&
+        _selectedDate.day == now.day;
   }
 
   Widget _buildDateNavigation() {
@@ -105,7 +107,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildSummaryGrid(double bmr, double caloriesConsumed, double caloriesBurned, double netDeficit) {
+  Widget _buildSummaryGrid(double bmr, double caloriesConsumed,
+      double caloriesBurned, double netDeficit) {
     final List<Map<String, dynamic>> summaryItems = [
       {
         'title': 'BMR',
@@ -118,7 +121,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         'title': 'Net Deficit',
         'value': '${netDeficit.round()}',
         'unit': 'kcal',
-        'color': netDeficit >= 0 ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+        'color':
+            netDeficit >= 0 ? const Color(0xFF10B981) : const Color(0xFFEF4444),
         'icon': Icons.trending_up,
       },
       {
@@ -227,7 +231,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final netDeficit = _todaySummary!['netDeficit'] ?? 0.0;
     final weight = _todaySummary!['weight'];
     final foodEntries = _todaySummary!['foodEntries'] as List<FoodEntry>;
-    final exerciseEntries = _todaySummary!['exerciseEntries'] as List<ExerciseEntry>;
+    final exerciseEntries =
+        _todaySummary!['exerciseEntries'] as List<ExerciseEntry>;
 
     return RefreshIndicator(
       onRefresh: _loadTodaySummary,
@@ -248,7 +253,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _buildEntriesSection(
               _isToday() ? 'Today\'s Food' : 'Food Entries',
               Icons.restaurant,
-              foodEntries.map((entry) => '${entry.name} - ${entry.calories.round()} kcal').toList(),
+              foodEntries
+                  .map((entry) =>
+                      '${entry.name} - ${entry.calories.round()} kcal')
+                  .toList(),
             ),
           ],
           if (exerciseEntries.isNotEmpty) ...[
@@ -270,11 +278,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Icon(
                     Icons.timeline,
                     size: 48,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withOpacity(0.5),
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    _isToday() ? 'No entries today' : 'No entries for this date',
+                    _isToday()
+                        ? 'No entries today'
+                        : 'No entries for this date',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 8),
@@ -324,7 +337,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       children: [
                         TextSpan(
                           text: weight.toStringAsFixed(1),
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineSmall
+                              ?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: Theme.of(context).colorScheme.primary,
                               ),
@@ -361,7 +377,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const DailyLogScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => const DailyLogScreen()),
                 ).then((_) => _loadTodaySummary());
               },
             ),
@@ -373,7 +390,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const ReportsScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => const ReportsScreen()),
                 );
               },
             ),
@@ -429,7 +447,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildEntriesSection(String title, IconData icon, List<String> entries) {
+  Widget _buildEntriesSection(
+      String title, IconData icon, List<String> entries) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(18),
@@ -438,7 +457,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             Row(
               children: [
-                Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
+                Icon(icon,
+                    size: 20, color: Theme.of(context).colorScheme.primary),
                 const SizedBox(width: 8),
                 Text(
                   title,
@@ -449,7 +469,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 12),
             ...entries.take(3).map((entry) => Padding(
                   padding: const EdgeInsets.only(bottom: 4),
-                  child: Text('• $entry', style: Theme.of(context).textTheme.bodyMedium),
+                  child: Text('• $entry',
+                      style: Theme.of(context).textTheme.bodyMedium),
                 )),
             if (entries.length > 3)
               Text(

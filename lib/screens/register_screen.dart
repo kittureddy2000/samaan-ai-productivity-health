@@ -36,15 +36,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     try {
       await context.read<AuthService>().registerWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-      );
-      
+            email: _emailController.text.trim(),
+            password: _passwordController.text,
+          );
+
       // Show success message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Account created successfully! Please complete your profile.'),
+            content: Text(
+                'Account created successfully! Please complete your profile.'),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 2),
           ),
@@ -110,9 +111,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
             key: _formKey,
             child: ConstrainedBox(
               constraints: BoxConstraints(
-                minHeight: MediaQuery.of(context).size.height - 
-                          MediaQuery.of(context).padding.top - 
-                          MediaQuery.of(context).padding.bottom - 48,
+                minHeight: MediaQuery.of(context).size.height -
+                    MediaQuery.of(context).padding.top -
+                    MediaQuery.of(context).padding.bottom -
+                    48,
               ),
               child: IntrinsicHeight(
                 child: Column(
@@ -159,7 +161,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         if (value == null || value.isEmpty) {
                           return 'Please enter your email';
                         }
-                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                            .hasMatch(value)) {
                           return 'Please enter a valid email';
                         }
                         return null;
@@ -176,7 +179,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         prefixIcon: const Icon(Icons.lock),
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                            _obscurePassword
+                                ? Icons.visibility
+                                : Icons.visibility_off,
                           ),
                           onPressed: () {
                             setState(() {
@@ -207,11 +212,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         prefixIcon: const Icon(Icons.lock_outline),
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _obscureConfirmPassword ? Icons.visibility : Icons.visibility_off,
+                            _obscureConfirmPassword
+                                ? Icons.visibility
+                                : Icons.visibility_off,
                           ),
                           onPressed: () {
                             setState(() {
-                              _obscureConfirmPassword = !_obscureConfirmPassword;
+                              _obscureConfirmPassword =
+                                  !_obscureConfirmPassword;
                             });
                           },
                         ),
@@ -296,4 +304,4 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
     );
   }
-} 
+}

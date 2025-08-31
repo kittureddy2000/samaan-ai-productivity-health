@@ -55,9 +55,10 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
             key: _formKey,
             child: ConstrainedBox(
               constraints: BoxConstraints(
-                minHeight: MediaQuery.of(context).size.height - 
-                          MediaQuery.of(context).padding.top - 
-                          MediaQuery.of(context).padding.bottom - 48,
+                minHeight: MediaQuery.of(context).size.height -
+                    MediaQuery.of(context).padding.top -
+                    MediaQuery.of(context).padding.bottom -
+                    48,
               ),
               child: IntrinsicHeight(
                 child: Column(
@@ -100,7 +101,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                         labelText: 'Name',
                         prefixIcon: Icon(Icons.person),
                       ),
-                      validator: (value) => value!.isEmpty ? 'Please enter your name' : null,
+                      validator: (value) =>
+                          value!.isEmpty ? 'Please enter your name' : null,
                     ),
                     const SizedBox(height: 16),
                     _buildDatePicker(),
@@ -208,7 +210,13 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                         labelText: 'Activity Level',
                         prefixIcon: Icon(Icons.directions_run),
                       ),
-                      items: ['Sedentary', 'Lightly Active', 'Moderately Active', 'Very Active', 'Extra Active']
+                      items: [
+                        'Sedentary',
+                        'Lightly Active',
+                        'Moderately Active',
+                        'Very Active',
+                        'Extra Active'
+                      ]
                           .map((label) => DropdownMenuItem(
                                 value: label.toLowerCase(),
                                 child: Text(label),
@@ -303,9 +311,12 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   Future<void> _selectDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now().subtract(const Duration(days: 365 * 25)), // 25 years ago
-      firstDate: DateTime.now().subtract(const Duration(days: 365 * 100)), // 100 years ago
-      lastDate: DateTime.now().subtract(const Duration(days: 365 * 13)), // 13 years ago
+      initialDate: DateTime.now()
+          .subtract(const Duration(days: 365 * 25)), // 25 years ago
+      firstDate: DateTime.now()
+          .subtract(const Duration(days: 365 * 100)), // 100 years ago
+      lastDate: DateTime.now()
+          .subtract(const Duration(days: 365 * 13)), // 13 years ago
       helpText: 'Select your date of birth',
     );
 
@@ -322,7 +333,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         content: Text(message),
         backgroundColor: isError
             ? Theme.of(context).colorScheme.error
-            : Theme.of(context).colorScheme.primary, // Using primary for success
+            : Theme.of(context)
+                .colorScheme
+                .primary, // Using primary for success
       ),
     );
   }
@@ -398,7 +411,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
             Text(
-              _selectedDate != null ? DateFormat.yMMMd().format(_selectedDate!) : 'Select Date',
+              _selectedDate != null
+                  ? DateFormat.yMMMd().format(_selectedDate!)
+                  : 'Select Date',
             ),
             const Icon(Icons.calendar_today),
           ],
@@ -406,4 +421,4 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       ),
     );
   }
-} 
+}
