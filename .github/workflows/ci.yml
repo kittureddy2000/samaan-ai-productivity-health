@@ -33,11 +33,14 @@ jobs:
             fi
           fi
 
-      - name: Ensure android google-services.json is staging (heuristic)
+      - name: Ensure android google-services.json is staging (precise)
         run: |
-          if grep -q "project_id" android/app/google-services.json; then
-            if grep -qi "prod" android/app/google-services.json; then
-              echo "android/app/google-services.json appears to be production; staging should be committed" && exit 1
+          if [ -f android/app/google-services.json ]; then
+            if grep -q '"project_id"[[:space:]]*:[[:space:]]*"samaan-ai-production-2025"' android/app/google-services.json; then
+              echo "android/app/google-services.json appears to be production (project_id)" && exit 1
+            fi
+            if grep -q '"package_name"[[:space:]]*:[[:space:]]*"com\.samaanai\.productivityhealth\.prod"' android/app/google-services.json; then
+              echo "android/app/google-services.json appears to be production (package_name)" && exit 1
             fi
           fi
 
