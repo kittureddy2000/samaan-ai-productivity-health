@@ -5,7 +5,6 @@ import 'package:http/http.dart' as http;
 import 'package:samaanai_fitness_tracker/services/firebase_service.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
-import 'dart:convert';
 
 import 'firebase_service_test.mocks.dart';
 

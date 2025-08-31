@@ -50,7 +50,6 @@ void main() {
 
       test('handles birthday not yet occurred this year', () {
         // Create profile with birthday later this year
-        final futureDate = DateTime(DateTime.now().year, 12, 31);
         final profile = UserProfile(
           uid: 'test_uid',
           email: 'test@example.com',

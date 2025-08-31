@@ -1,4 +1,3 @@
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
@@ -21,12 +20,7 @@ void main() {
         const email = 'test@example.com';
         const password = 'password123';
 
-        // Mock user
-        final mockUser = MockUser(
-          uid: 'test_uid',
-          email: email,
-          displayName: 'Test User',
-        );
+        // Mock user creation via mock auth
 
         // Setup the mock to return the user
         await mockFirebaseAuth.createUserWithEmailAndPassword(

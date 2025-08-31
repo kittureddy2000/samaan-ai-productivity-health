@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
 import '../services/firebase_service.dart';
 import '../models/user_profile.dart';
@@ -25,7 +24,7 @@ class ProfileMenuWidget extends StatelessWidget {
             // Profile header with picture
             FutureBuilder<UserProfile?>(
               future: user != null
-                  ? context.read<FirebaseService>().getUserProfile(user!.uid)
+                  ? context.read<FirebaseService>().getUserProfile(user.uid)
                   : Future.value(null),
               builder: (context, snapshot) {
                 final profile = snapshot.data;
@@ -115,7 +114,7 @@ class ProfileMenuWidget extends StatelessWidget {
         onTap: () => _showProfileMenu(context),
         child: FutureBuilder<UserProfile?>(
           future: user != null
-              ? context.read<FirebaseService>().getUserProfile(user!.uid)
+              ? context.read<FirebaseService>().getUserProfile(user.uid)
               : Future.value(null),
           builder: (context, snapshot) {
             final profile = snapshot.data;

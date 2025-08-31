@@ -8,11 +8,11 @@ class FirebaseDebug {
     final app = Firebase.app();
     final options = app.options;
 
-    print('🔧 Firebase Configuration Debug:');
-    print('  Project ID: ${options.projectId}');
-    print('  API Key: ${options.apiKey.substring(0, 10)}...');
-    print('  Auth Domain: ${options.authDomain}');
-    print('  App ID: ${options.appId}');
+    debugPrint('🔧 Firebase Configuration Debug:');
+    debugPrint('  Project ID: ${options.projectId}');
+    debugPrint('  API Key: ${options.apiKey.substring(0, 10)}...');
+    debugPrint('  Auth Domain: ${options.authDomain}');
+    debugPrint('  App ID: ${options.appId}');
 
     // Check environment variables
     const environment =
@@ -20,29 +20,30 @@ class FirebaseDebug {
     const googleClientId =
         String.fromEnvironment('GOOGLE_CLIENT_ID', defaultValue: 'not set');
 
-    print('🌍 Environment Variables:');
-    print('  ENVIRONMENT: $environment');
-    print(
+    debugPrint('🌍 Environment Variables:');
+    debugPrint('  ENVIRONMENT: $environment');
+    debugPrint(
         '  GOOGLE_CLIENT_ID: ${googleClientId == "not set" ? "not set" : "${googleClientId.substring(0, 10)}..."}');
 
     if (kIsWeb) {
-      print('🌐 Web Platform Detected');
-      print('  Check that web/index.html has proper meta tags');
+      debugPrint('🌐 Web Platform Detected');
+      debugPrint('  Check that web/index.html has proper meta tags');
     } else {
-      print('📱 Mobile Platform Detected');
+      debugPrint('📱 Mobile Platform Detected');
     }
   }
 
   static void logAuthMethods() {
     if (!kDebugMode) return;
 
-    print('🔐 To fix "operation-not-allowed" error:');
-    print('  1. Go to Firebase Console: https://console.firebase.google.com');
-    print('  2. Select project: samaan-ai-staging-2025');
-    print('  3. Go to Authentication > Sign-in method');
-    print('  4. Enable "Email/Password" provider');
-    print('  5. Enable "Google" provider and add your domain');
-    print(
+    debugPrint('🔐 To fix "operation-not-allowed" error:');
+    debugPrint(
+        '  1. Go to Firebase Console: https://console.firebase.google.com');
+    debugPrint('  2. Select project: samaan-ai-staging-2025');
+    debugPrint('  3. Go to Authentication > Sign-in method');
+    debugPrint('  4. Enable "Email/Password" provider');
+    debugPrint('  5. Enable "Google" provider and add your domain');
+    debugPrint(
         '  6. For Google web: Add http://localhost:5000 to authorized origins');
   }
 }
