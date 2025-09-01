@@ -73,9 +73,8 @@ jobs:
         echo "Using Android API_KEY=${ANDROID_API_KEY:0:10}********"
         echo "Using Android STORAGE_BUCKET=$STORAGE_BUCKET"
         
-        # Create a more precise sed script for Android block replacement
-        # This approach creates a temporary file to ensure exact block targeting
-        python3 << 'EOF'
+        # Create and run Python script to update Firebase options
+        cat > update_firebase_config.py << 'PYTHON_SCRIPT'
 import re
 import sys
 
@@ -110,7 +109,10 @@ if match:
 else:
     print("❌ Could not find Android FirebaseOptions block")
     sys.exit(1)
-EOF "$ANDROID_API_KEY" "$ANDROID_APP_ID" "$STORAGE_BUCKET"
+PYTHON_SCRIPT
+        
+        python3 update_firebase_config.py "$ANDROID_API_KEY" "$ANDROID_APP_ID" "$STORAGE_BUCKET"
+        rm update_firebase_config.py
         
         echo "✅ Replaced Firebase options with staging values (web from secrets, android from google-services.json)"
         
