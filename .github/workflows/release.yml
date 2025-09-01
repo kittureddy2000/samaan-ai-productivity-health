@@ -78,7 +78,7 @@ jobs:
         echo "📋 This SHA-1 should be registered in Firebase for package: com.samaanai.productivityhealth.prod"
         
         # Warning about staging conflict
-        STAGING_SHA1="53315440bd500648d1034bdf6fa462fce03775fa"
+        STAGING_SHA1="7e221caa4a68c4c47179faea691934f1435e016c"
         if [ "$KEYSTORE_SHA1_CLEAN" = "$STAGING_SHA1" ]; then
           echo "❌ WARNING: Production SHA-1 matches staging SHA-1!"
           echo "   This will cause Firebase OAuth conflicts."
@@ -227,21 +227,19 @@ jobs:
         AAB=build/app/outputs/bundle/productionRelease/app-production-release.aab
         APK_SHA=$(cut -d' ' -f1 ${APK}.sha256)
         AAB_SHA=$(cut -d' ' -f1 ${AAB}.sha256)
-        cat > RELEASE_NOTES.md <<EOF
+        cat > RELEASE_NOTES.md << 'RELEASE_EOF'
 🚀 Production Release ${GITHUB_REF_NAME}
 
 SHA256 checksums:
-- APK: \
-\`${APK_SHA}\`
-- AAB: \
-\`${AAB_SHA}\`
+- APK: `${APK_SHA}`
+- AAB: `${AAB_SHA}`
 
 📱 Android APK (release): Download from assets below
 📦 Android AAB (release): For Play Store deployment
 🌐 Web: Deployed to https://samaan-ai-production-2025.web.app
 
 This release includes both web and Android builds.
-EOF
+RELEASE_EOF
         
     - name: Create GitHub Release
       if: startsWith(github.ref, 'refs/tags/')

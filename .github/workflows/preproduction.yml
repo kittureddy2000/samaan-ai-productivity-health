@@ -217,7 +217,7 @@ jobs:
         echo "🧪 Gradle debug SHA-1: $DEBUG_SHA1"
         # Normalize
         DEBUG_SHA1_CLEAN=$(echo "$DEBUG_SHA1" | tr -d ':' | tr '[:upper:]' '[:lower:]')
-        EXPECTED_SHA1="53315440bd500648d1034bdf6fa462fce03775fa"
+        EXPECTED_SHA1="7e221caa4a68c4c47179faea691934f1435e016c"
         if [ "$DEBUG_SHA1_CLEAN" = "$EXPECTED_SHA1" ]; then
           echo "✅ Gradle debug signingReport SHA-1 matches expected"
         else
@@ -232,7 +232,7 @@ jobs:
         echo "🔍 Verifying certificate_hash in android/app/google-services.json"
         CERT=$(grep -o '"certificate_hash"[[:space:]]*:[[:space:]]*"[^"]*"' android/app/google-services.json | head -n1 | sed 's/.*:[[:space:]]*"//; s/"$//')
         echo "📄 certificate_hash in json: $CERT"
-        EXPECTED="53315440bd500648d1034bdf6fa462fce03775fa"
+        EXPECTED="7e221caa4a68c4c47179faea691934f1435e016c"
         CERT_L=$(echo "$CERT" | tr '[:upper:]' '[:lower:]')
         if [ "$CERT_L" != "$EXPECTED" ]; then
           echo "❌ certificate_hash mismatch"
