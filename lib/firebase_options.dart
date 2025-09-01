@@ -53,13 +53,11 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey:
-        'YOUR_ANDROID_API_KEY_HERE', // You need to replace this from the Android app config in Firebase
-    appId:
-        'YOUR_ANDROID_APP_ID_HERE', // You need to replace this from the Android app config in Firebase
+    apiKey: 'AIzaSyDngmDDrO8GnMK898Ecy-eRiIFQc_YSs_I',
+    appId: '1:362525403590:android:3c8a94a5ceee9942e36ac7',
     messagingSenderId: '362525403590',
     projectId: 'samaan-ai-staging-2025',
-    storageBucket: 'samaan-ai-staging-2025.appspot.com',
+    storageBucket: 'samaan-ai-staging-2025.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
