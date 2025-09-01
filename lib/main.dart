@@ -9,12 +9,59 @@ import 'package:samaanai_fitness_tracker/theme/app_theme.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
+import 'package:samaanai_fitness_tracker/utils/firebase_debug.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+    debugPrint(
+        'FlutterError: \\n${details.exceptionAsString()}\\n${details.stack}');
+  };
+
+  try {
+    debugPrint('🚀 Starting Firebase initialization...');
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    debugPrint('✅ Firebase initialized successfully');
+
+    // Log Firebase config in debug builds to help diagnose Android init issues
+    FirebaseDebug.logCurrentConfiguration();
+  } catch (e, stackTrace) {
+    debugPrint('❌ FATAL: Firebase initialization failed');
+    debugPrint('Error: $e');
+    debugPrint('Stack trace: $stackTrace');
+
+    // Don't proceed if Firebase fails to initialize
+    runApp(MaterialApp(
+      title: 'Samaan AI - Init Error',
+      home: Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error, size: 64, color: Colors.red),
+              const SizedBox(height: 16),
+              const Text('Firebase initialization failed'),
+              const SizedBox(height: 8),
+              Text('Error: $e', style: const TextStyle(fontSize: 12)),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  // Restart the app
+                  main();
+                },
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ));
+    return;
+  }
+
   runApp(const MyApp());
 }
 

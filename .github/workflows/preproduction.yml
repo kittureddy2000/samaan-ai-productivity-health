@@ -53,21 +53,119 @@ jobs:
       
     - name: Configure Firebase Options for Staging
       run: |
+        echo "🔧 Configuring Firebase Options for staging environment..."
+        
+        # Backup original firebase_options.dart
+        cp lib/firebase_options.dart lib/firebase_options.dart.backup
+        
         # Set web values from secrets
+        echo "📱 Setting web Firebase configuration from secrets..."
         sed -i "s/apiKey: '.*'/apiKey: '${{ secrets.FIREBASE_API_KEY_STAGING }}'/g" lib/firebase_options.dart
         sed -i "s/appId: '1:[0-9]*:web:[a-zA-Z0-9]*'/appId: '${{ secrets.FIREBASE_APP_ID_WEB_STAGING }}'/g" lib/firebase_options.dart
         
         # Derive Android values from the decoded google-services.json to ensure perfect match
+        echo "📱 Extracting Android Firebase configuration from google-services.json..."
         ANDROID_APP_ID=$(python3 -c "import json,sys; j=json.load(open('android/app/google-services.json')); print(j['client'][0]['client_info']['mobilesdk_app_id'])")
         ANDROID_API_KEY=$(python3 -c "import json,sys; j=json.load(open('android/app/google-services.json')); print(j['client'][0]['api_key'][0]['current_key'])")
+        STORAGE_BUCKET=$(python3 -c "import json,sys; j=json.load(open('android/app/google-services.json')); print(j['project_info']['storage_bucket'])")
+        
         echo "Using Android APP_ID=$ANDROID_APP_ID"
-        echo "Using Android API_KEY=${ANDROID_API_KEY:0:6}********"
+        echo "Using Android API_KEY=${ANDROID_API_KEY:0:10}********"
+        echo "Using Android STORAGE_BUCKET=$STORAGE_BUCKET"
         
-        # Replace only inside the android options block
-        sed -i "/static const FirebaseOptions android/,/);/ s/appId: '.*'/appId: '$ANDROID_APP_ID'/" lib/firebase_options.dart
-        sed -i "/static const FirebaseOptions android/,/);/ s/apiKey: '.*'/apiKey: '$ANDROID_API_KEY'/" lib/firebase_options.dart
+        # Create a more precise sed script for Android block replacement
+        # This approach creates a temporary file to ensure exact block targeting
+        python3 << 'EOF'
+import re
+import sys
+
+# Read the firebase_options.dart file
+with open('lib/firebase_options.dart', 'r') as f:
+    content = f.read()
+
+# Extract the Android block and replace the values
+android_pattern = r'(static const FirebaseOptions android = FirebaseOptions\(\s*)(.*?)(\s*\);)'
+match = re.search(android_pattern, content, re.DOTALL)
+
+if match:
+    android_block_content = match.group(2)
+    # Replace apiKey
+    android_block_content = re.sub(r"apiKey: '[^']*'", f"apiKey: '{sys.argv[1]}'", android_block_content)
+    # Replace appId
+    android_block_content = re.sub(r"appId: '[^']*'", f"appId: '{sys.argv[2]}'", android_block_content)
+    # Replace storageBucket
+    android_block_content = re.sub(r"storageBucket: '[^']*'", f"storageBucket: '{sys.argv[3]}'", android_block_content)
+    
+    # Reconstruct the Android block
+    new_android_block = match.group(1) + android_block_content + match.group(3)
+    
+    # Replace the entire Android block in the content
+    content = re.sub(android_pattern, new_android_block, content, flags=re.DOTALL)
+    
+    # Write back to file
+    with open('lib/firebase_options.dart', 'w') as f:
+        f.write(content)
+    
+    print("✅ Successfully updated Android Firebase configuration")
+else:
+    print("❌ Could not find Android FirebaseOptions block")
+    sys.exit(1)
+EOF "$ANDROID_API_KEY" "$ANDROID_APP_ID" "$STORAGE_BUCKET"
         
-        echo "✅ Replaced placeholders in firebase_options.dart with staging values (web from secrets, android from google-services.json)"
+        echo "✅ Replaced Firebase options with staging values (web from secrets, android from google-services.json)"
+        
+    - name: Validate Firebase Android Configuration
+      run: |
+        echo "🔍 Validating Firebase Android configuration consistency..."
+        
+        # Extract values from google-services.json
+        JSON_APP_ID=$(python3 -c "import json; j=json.load(open('android/app/google-services.json')); print(j['client'][0]['client_info']['mobilesdk_app_id'])")
+        JSON_API_KEY=$(python3 -c "import json; j=json.load(open('android/app/google-services.json')); print(j['client'][0]['api_key'][0]['current_key'])")
+        JSON_PROJECT_ID=$(python3 -c "import json; j=json.load(open('android/app/google-services.json')); print(j['project_info']['project_id'])")
+        JSON_STORAGE_BUCKET=$(python3 -c "import json; j=json.load(open('android/app/google-services.json')); print(j['project_info']['storage_bucket'])")
+        
+        # Extract values from firebase_options.dart
+        DART_APP_ID=$(grep -A 20 "static const FirebaseOptions android" lib/firebase_options.dart | grep "appId:" | sed "s/.*appId: '//; s/',.*//")
+        DART_API_KEY=$(grep -A 20 "static const FirebaseOptions android" lib/firebase_options.dart | grep "apiKey:" | sed "s/.*apiKey: '//; s/',.*//")
+        DART_PROJECT_ID=$(grep -A 20 "static const FirebaseOptions android" lib/firebase_options.dart | grep "projectId:" | sed "s/.*projectId: '//; s/',.*//")
+        DART_STORAGE_BUCKET=$(grep -A 20 "static const FirebaseOptions android" lib/firebase_options.dart | grep "storageBucket:" | sed "s/.*storageBucket: '//; s/',.*//")
+        
+        echo "🔍 Comparison Results:"
+        echo "APP_ID:        JSON=$JSON_APP_ID | DART=$DART_APP_ID"
+        echo "API_KEY:       JSON=${JSON_API_KEY:0:10}*** | DART=${DART_API_KEY:0:10}***"
+        echo "PROJECT_ID:    JSON=$JSON_PROJECT_ID | DART=$DART_PROJECT_ID"
+        echo "STORAGE_BUCKET: JSON=$JSON_STORAGE_BUCKET | DART=$DART_STORAGE_BUCKET"
+        
+        # Validation checks
+        VALIDATION_FAILED=false
+        
+        if [ "$JSON_APP_ID" != "$DART_APP_ID" ]; then
+          echo "❌ APP_ID mismatch!"
+          VALIDATION_FAILED=true
+        fi
+        
+        if [ "$JSON_API_KEY" != "$DART_API_KEY" ]; then
+          echo "❌ API_KEY mismatch!"
+          VALIDATION_FAILED=true
+        fi
+        
+        if [ "$JSON_PROJECT_ID" != "$DART_PROJECT_ID" ]; then
+          echo "❌ PROJECT_ID mismatch!"
+          VALIDATION_FAILED=true
+        fi
+        
+        if [ "$JSON_STORAGE_BUCKET" != "$DART_STORAGE_BUCKET" ]; then
+          echo "❌ STORAGE_BUCKET mismatch!"
+          VALIDATION_FAILED=true
+        fi
+        
+        if [ "$VALIDATION_FAILED" = true ]; then
+          echo "❌ FATAL: Firebase configuration validation failed!"
+          echo "This will likely cause Android app initialization to fail."
+          exit 1
+        fi
+        
+        echo "✅ All Firebase Android configuration values match google-services.json"
         
     - name: Replace Firebase configuration in web template
       run: |
