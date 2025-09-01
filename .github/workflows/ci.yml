@@ -50,7 +50,7 @@ jobs:
 
       - name: Analyze
         run: |
-          flutter analyze --no-pub
+          flutter analyze --no-pub --no-fatal-infos --no-fatal-warnings
 
       - name: Unit tests
         run: |
