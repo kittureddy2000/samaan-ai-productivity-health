@@ -1,5 +1,6 @@
 import json
 import sys
+import os
 
 with open('staging-google-services.json', 'r') as f:
     data = json.load(f)
@@ -30,12 +31,15 @@ if package_name != 'com.samaanai.productivityhealth':
     print(f'❌ Unexpected package name: {package_name}')
     sys.exit(1)
 
-# For staging, we expect our consistent debug keystore hash: 53315440bd500648d1034bdf6fa462fce03775fa
-expected_debug_hash = '53315440bd500648d1034bdf6fa462fce03775fa'
-if cert_hash != expected_debug_hash:
-    print(f'❌ Staging should use consistent debug keystore hash: {expected_debug_hash}')
-    print(f'❌ But got: {cert_hash}')
-    print('❌ Make sure GOOGLE_SERVICES_STAGING has the correct SHA-1')
-    sys.exit(1)
+# Compare against EXPECTED_DEBUG_SHA1 if provided (computed from DEBUG_KEYSTORE in CI)
+expected_debug_hash = os.environ.get('EXPECTED_DEBUG_SHA1')
+if expected_debug_hash:
+    if cert_hash.lower() != expected_debug_hash.lower():
+        print(f'❌ Staging should use consistent debug keystore hash: {expected_debug_hash}')
+        print(f'❌ But got: {cert_hash}')
+        print('❌ Make sure GOOGLE_SERVICES_STAGING matches the DEBUG_KEYSTORE SHA-1')
+        sys.exit(1)
+else:
+    print('⚠️  EXPECTED_DEBUG_SHA1 not set; skipping SHA-1 match enforcement')
 
 print('✅ Staging configuration is valid!')

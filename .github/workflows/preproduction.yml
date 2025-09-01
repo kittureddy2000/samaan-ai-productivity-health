@@ -197,18 +197,18 @@ jobs:
         # Verify the keystore and get SHA-1
         echo "🔍 Verifying debug keystore SHA-1..."
         KEYSTORE_SHA1=$(keytool -list -v -keystore /home/runner/.config/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android | grep "SHA1:" | sed 's/.*SHA1: //' | tr -d ' ')
-        echo "🔑 Keystore SHA-1: $KEYSTORE_SHA1"
-        
-        # Expected SHA-1 (without colons, lowercase)
-        EXPECTED_SHA1="53315440bd500648d1034bdf6fa462fce03775fa"
         KEYSTORE_SHA1_CLEAN=$(echo "$KEYSTORE_SHA1" | tr -d ':' | tr '[:upper:]' '[:lower:]')
+        echo "🔑 Keystore SHA-1: $KEYSTORE_SHA1_CLEAN"
         
-        if [ "$KEYSTORE_SHA1_CLEAN" = "$EXPECTED_SHA1" ]; then
-          echo "✅ SUCCESS: Debug keystore SHA-1 matches Firebase configuration!"
+        # Compare google-services.json certificate_hash with computed SHA-1
+        CERT=$(grep -o '"certificate_hash"[[:space:]]*:[[:space:]]*"[^"]*"' android/app/google-services.json | head -n1 | sed 's/.*:[[:space:]]*"//; s/"$//')
+        CERT_L=$(echo "$CERT" | tr '[:upper:]' '[:lower:]')
+        if [ "$CERT_L" = "$KEYSTORE_SHA1_CLEAN" ]; then
+          echo "✅ SUCCESS: google-services.json certificate_hash matches DEBUG_KEYSTORE"
         else
-          echo "❌ FATAL: SHA-1 mismatch!"
-          echo "   Expected: $EXPECTED_SHA1"  
-          echo "   Got:      $KEYSTORE_SHA1_CLEAN"
+          echo "❌ FATAL: google-services.json certificate_hash does not match DEBUG_KEYSTORE"
+          echo "   google-services.json: $CERT_L"
+          echo "   DEBUG_KEYSTORE SHA-1: $KEYSTORE_SHA1_CLEAN"
           exit 1
         fi
         

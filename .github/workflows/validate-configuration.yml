@@ -44,8 +44,16 @@ jobs:
           exit 1
         fi
         
+        # If DEBUG_KEYSTORE is present, compute EXPECTED_DEBUG_SHA1 for comparison
+        if [ -n "${{ secrets.DEBUG_KEYSTORE }}" ]; then
+          echo "${{ secrets.DEBUG_KEYSTORE }}" | base64 -d > /tmp/debug.keystore
+          EXPECTED_SHA1=$(keytool -list -v -keystore /tmp/debug.keystore -alias androiddebugkey -storepass android -keypass android | grep "SHA1:" | sed 's/.*SHA1: //' | tr -d ':' | tr '[:upper:]' '[:lower:]')
+          export EXPECTED_DEBUG_SHA1=$EXPECTED_SHA1
+          echo "Computed EXPECTED_DEBUG_SHA1=$EXPECTED_DEBUG_SHA1"
+        fi
+        
         # Run Python validation script
-        python3 .github/scripts/validate_staging.py
+        EXPECTED_DEBUG_SHA1=$EXPECTED_DEBUG_SHA1 python3 .github/scripts/validate_staging.py
         
     - name: Validate Production Configuration
       run: |
