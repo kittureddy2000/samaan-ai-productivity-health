@@ -77,10 +77,17 @@ jobs:
         echo "Using Android API_KEY=${ANDROID_API_KEY:0:10}********"
         echo "Using Android STORAGE_BUCKET=$STORAGE_BUCKET"
         
-        # Use the test script we created to update Firebase configuration
-        python3 scripts/test-firebase-config-simple.py --update-only "$ANDROID_API_KEY" "$ANDROID_APP_ID" "$STORAGE_BUCKET"
-        
-        echo "✅ Replaced Firebase options with staging values (web from secrets, android from google-services.json)"
+        # Also extract project id for completeness
+        PROJECT_ID=$(python3 -c "import json,sys; j=json.load(open('android/app/google-services.json')); print(j['project_info']['project_id'])")
+
+        # Update android block in lib/firebase_options.dart directly to match google-services.json
+        echo "🛠 Updating android FirebaseOptions in lib/firebase_options.dart"
+        sed -i "/static const FirebaseOptions android/,/);/ s/appId: '.*'/appId: '$ANDROID_APP_ID'/" lib/firebase_options.dart
+        sed -i "/static const FirebaseOptions android/,/);/ s/apiKey: '.*'/apiKey: '$ANDROID_API_KEY'/" lib/firebase_options.dart
+        sed -i "/static const FirebaseOptions android/,/);/ s/projectId: '.*'/projectId: '$PROJECT_ID'/" lib/firebase_options.dart
+        sed -i "/static const FirebaseOptions android/,/);/ s/storageBucket: '.*'/storageBucket: '$STORAGE_BUCKET'/" lib/firebase_options.dart
+
+        echo "✅ Android Firebase options updated to match google-services.json"
         
     - name: Validate Firebase Android Configuration
       run: |
