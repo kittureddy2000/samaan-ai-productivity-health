@@ -5,6 +5,46 @@ import re
 import sys
 import os
 
+def update_firebase_config_only(android_api_key, android_app_id, storage_bucket):
+    """Update firebase_options.dart with provided values (for CI use)"""
+    print("🔧 Updating Firebase Android configuration...")
+    
+    try:
+        with open('lib/firebase_options.dart', 'r') as f:
+            content = f.read()
+        
+        # Extract the Android block and replace the values
+        android_pattern = r'(static const FirebaseOptions android = FirebaseOptions\(\s*)(.*?)(\s*\);)'
+        match = re.search(android_pattern, content, re.DOTALL)
+        
+        if match:
+            android_block_content = match.group(2)
+            
+            # Replace values
+            android_block_content = re.sub(r"apiKey: '[^']*'", f"apiKey: '{android_api_key}'", android_block_content)
+            android_block_content = re.sub(r"appId: '[^']*'", f"appId: '{android_app_id}'", android_block_content)
+            android_block_content = re.sub(r"storageBucket: '[^']*'", f"storageBucket: '{storage_bucket}'", android_block_content)
+            
+            # Reconstruct the Android block
+            new_android_block = match.group(1) + android_block_content + match.group(3)
+            
+            # Replace the entire Android block in the content
+            content = re.sub(android_pattern, new_android_block, content, flags=re.DOTALL)
+            
+            # Write back to file
+            with open('lib/firebase_options.dart', 'w') as f:
+                f.write(content)
+            
+            print("✅ Successfully updated Android Firebase configuration")
+            return True
+        else:
+            print("❌ Could not find Android FirebaseOptions block")
+            return False
+            
+    except Exception as e:
+        print(f"❌ Failed to update firebase_options.dart: {e}")
+        return False
+
 def main():
     print("🧪 Testing Firebase Configuration Process...")
     
@@ -143,5 +183,13 @@ def main():
     return True
 
 if __name__ == "__main__":
-    success = main()
-    sys.exit(0 if success else 1)
+    # Check for --update-only flag (for CI use)
+    if len(sys.argv) >= 5 and sys.argv[1] == "--update-only":
+        android_api_key = sys.argv[2]
+        android_app_id = sys.argv[3] 
+        storage_bucket = sys.argv[4]
+        success = update_firebase_config_only(android_api_key, android_app_id, storage_bucket)
+        sys.exit(0 if success else 1)
+    else:
+        success = main()
+        sys.exit(0 if success else 1)

@@ -1,9 +1,13 @@
-name: Pre-Production Deploy
+name: Pre-Production Deploy (Staging)
 
 on:
   push:
     branches:
       - main  # Trigger on push to main branch
+    paths-ignore:
+      - 'README.md'
+      - 'docs/**' 
+      - '**.md'
   workflow_dispatch:  # Allow manual trigger
 
 jobs:
@@ -73,46 +77,8 @@ jobs:
         echo "Using Android API_KEY=${ANDROID_API_KEY:0:10}********"
         echo "Using Android STORAGE_BUCKET=$STORAGE_BUCKET"
         
-        # Create and run Python script to update Firebase options
-        cat > update_firebase_config.py << 'PYTHON_SCRIPT'
-import re
-import sys
-
-# Read the firebase_options.dart file
-with open('lib/firebase_options.dart', 'r') as f:
-    content = f.read()
-
-# Extract the Android block and replace the values
-android_pattern = r'(static const FirebaseOptions android = FirebaseOptions\(\s*)(.*?)(\s*\);)'
-match = re.search(android_pattern, content, re.DOTALL)
-
-if match:
-    android_block_content = match.group(2)
-    # Replace apiKey
-    android_block_content = re.sub(r"apiKey: '[^']*'", f"apiKey: '{sys.argv[1]}'", android_block_content)
-    # Replace appId
-    android_block_content = re.sub(r"appId: '[^']*'", f"appId: '{sys.argv[2]}'", android_block_content)
-    # Replace storageBucket
-    android_block_content = re.sub(r"storageBucket: '[^']*'", f"storageBucket: '{sys.argv[3]}'", android_block_content)
-    
-    # Reconstruct the Android block
-    new_android_block = match.group(1) + android_block_content + match.group(3)
-    
-    # Replace the entire Android block in the content
-    content = re.sub(android_pattern, new_android_block, content, flags=re.DOTALL)
-    
-    # Write back to file
-    with open('lib/firebase_options.dart', 'w') as f:
-        f.write(content)
-    
-    print("✅ Successfully updated Android Firebase configuration")
-else:
-    print("❌ Could not find Android FirebaseOptions block")
-    sys.exit(1)
-PYTHON_SCRIPT
-        
-        python3 update_firebase_config.py "$ANDROID_API_KEY" "$ANDROID_APP_ID" "$STORAGE_BUCKET"
-        rm update_firebase_config.py
+        # Use the test script we created to update Firebase configuration
+        python3 scripts/test-firebase-config-simple.py --update-only "$ANDROID_API_KEY" "$ANDROID_APP_ID" "$STORAGE_BUCKET"
         
         echo "✅ Replaced Firebase options with staging values (web from secrets, android from google-services.json)"
         

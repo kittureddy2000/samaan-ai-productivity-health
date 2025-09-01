@@ -3,7 +3,9 @@ name: Validate Configuration
 on:
   workflow_dispatch:  # Manual trigger for validation
   pull_request:      # Run on PRs to catch issues early
-  push:              # Also run on push to main
+    branches: [ main ]
+  schedule:          # Run weekly to catch config drift
+    - cron: '0 6 * * 1'  # Every Monday at 6 AM UTC
 
 jobs:
   validate-secrets:
