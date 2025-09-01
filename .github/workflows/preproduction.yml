@@ -121,10 +121,33 @@ jobs:
       
     - name: Setup Firebase Service Account
       run: |
+        echo "🔐 Setting up Firebase service account..."
+        
+        # Check if the secret exists
+        if [ -z "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}" ]; then
+          echo "❌ FATAL: GOOGLE_APPLICATION_CREDENTIALS_JSON secret is missing!"
+          echo "Please add this secret to your GitHub repository settings."
+          echo "It should contain the base64-encoded Firebase service account JSON."
+          exit 1
+        fi
+        
+        # Decode and save the service account key
+        echo "📝 Decoding service account credentials..."
         echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}" | base64 -d > $HOME/gcloud-service-key.json
+        
+        # Verify the decoded file is valid JSON
+        if ! python3 -m json.tool $HOME/gcloud-service-key.json > /dev/null 2>&1; then
+          echo "❌ FATAL: Decoded service account key is not valid JSON!"
+          echo "Please check that GOOGLE_APPLICATION_CREDENTIALS_JSON secret contains valid base64-encoded JSON."
+          exit 1
+        fi
+        
+        # Set up authentication
         export GOOGLE_APPLICATION_CREDENTIALS=$HOME/gcloud-service-key.json
         gcloud auth activate-service-account --key-file=$HOME/gcloud-service-key.json
         echo "GOOGLE_APPLICATION_CREDENTIALS=$HOME/gcloud-service-key.json" >> $GITHUB_ENV
+        
+        echo "✅ Firebase service account setup complete"
         
     - name: Deploy to Firebase (Staging)
       run: |
