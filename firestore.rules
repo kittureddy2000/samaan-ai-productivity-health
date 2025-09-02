@@ -74,7 +74,18 @@ service cloud.firestore {
         && data.weight <= 1100
         && data.gender in ['male', 'female']
         && data.createdAt is timestamp
-        && data.updatedAt is timestamp;
+        && data.updatedAt is timestamp
+        // Optional fields validation (allow null or valid strings)
+        && (
+          !data.keys().hasAny(['displayName']) ||
+          data.displayName == null ||
+          data.displayName is string
+        )
+        && (
+          !data.keys().hasAny(['photoURL']) ||
+          data.photoURL == null ||
+          data.photoURL is string
+        );
     }
     
     function validateDailyEntry(data) {
