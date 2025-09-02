@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
-import 'package:samaanai_fitness_tracker/firebase_options.dart';
+import 'package:samaanai_fitness_tracker/config/firebase_config.dart';
 import 'package:samaanai_fitness_tracker/screens/auth_gate.dart';
 import 'package:samaanai_fitness_tracker/services/auth_service.dart';
 import 'package:samaanai_fitness_tracker/services/firebase_service.dart';
@@ -21,10 +21,16 @@ Future<void> main() async {
 
   try {
     debugPrint('🚀 Starting Firebase initialization...');
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-    debugPrint('✅ Firebase initialized successfully');
+    
+    // Check if Firebase is already initialized to prevent duplicate app error
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(
+        options: FirebaseConfig.currentPlatform,
+      );
+      debugPrint('✅ Firebase initialized successfully');
+    } else {
+      debugPrint('✅ Firebase already initialized, using existing app');
+    }
 
     // Log Firebase config in debug builds to help diagnose Android init issues
     FirebaseDebug.logCurrentConfiguration();
