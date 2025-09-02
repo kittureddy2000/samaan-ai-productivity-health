@@ -3,8 +3,13 @@ name: Production Release
 on:
   push:
     tags:
-      - 'v*'  # Trigger on version tags like v1.0.0
-  workflow_dispatch:  # Allow manual trigger
+      - 'v*'  # Trigger on version tags like v1.0.0, v1.0.1, etc.
+  workflow_dispatch:  # Allow manual trigger for testing
+    inputs:
+      version:
+        description: 'Version to release (e.g., v1.0.0)'
+        required: false
+        default: 'manual-release'
 
 permissions:
   contents: write  # Required for creating releases
@@ -18,6 +23,18 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      
+    - name: Debug Production Build Environment
+      run: |
+        echo "🏭 Starting Production Release Build"
+        echo "📋 Trigger: ${{ github.event_name }}"
+        echo "🏷️ Ref: ${{ github.ref }}"
+        echo "📝 SHA: ${{ github.sha }}"
+        if [ "${{ github.event_name }}" == "push" ]; then
+          echo "🎯 Tag-triggered build detected"
+        else
+          echo "🎯 Manual workflow dispatch detected"
+        fi
       
     - name: Setup Java
       uses: actions/setup-java@v4
