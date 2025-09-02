@@ -33,11 +33,30 @@ class FirebaseService extends ChangeNotifier {
   // User Profile Methods
   Future<void> createUserProfile(UserProfile profile) async {
     try {
+      print('🔍 Debug: Starting createUserProfile for UID: ${profile.uid}');
+      print('🔍 Debug: Current user: ${_auth.currentUser?.uid}');
+      print('🔍 Debug: Auth state: ${_auth.currentUser != null ? "logged in" : "not logged in"}');
+      
+      // Check if user is authenticated
+      if (_auth.currentUser == null) {
+        throw Exception('User not authenticated');
+      }
+      
+      // Get ID token for debugging
+      final idToken = await _auth.currentUser!.getIdToken();
+      print('🔍 Debug: ID Token length: ${idToken.length}');
+      
+      print('🔍 Debug: Profile data: ${profile.toFirestore()}');
+      
       await _firestore
           .collection(usersCollection)
           .doc(profile.uid)
           .set(profile.toFirestore());
+          
+      print('✅ Debug: Profile created successfully');
     } catch (e) {
+      print('❌ Debug: Error creating profile: $e');
+      print('❌ Debug: Error type: ${e.runtimeType}');
       throw Exception('Failed to create user profile: $e');
     }
   }
