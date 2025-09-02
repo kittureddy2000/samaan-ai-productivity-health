@@ -244,19 +244,19 @@ jobs:
         AAB=build/app/outputs/bundle/productionRelease/app-production-release.aab
         APK_SHA=$(cut -d' ' -f1 ${APK}.sha256)
         AAB_SHA=$(cut -d' ' -f1 ${AAB}.sha256)
-        cat > RELEASE_NOTES.md << 'RELEASE_EOF'
+        cat > RELEASE_NOTES.md << EOF
 🚀 Production Release ${GITHUB_REF_NAME}
 
 SHA256 checksums:
-- APK: `${APK_SHA}`
-- AAB: `${AAB_SHA}`
+- APK: \`${APK_SHA}\`
+- AAB: \`${AAB_SHA}\`
 
 📱 Android APK (release): Download from assets below
 📦 Android AAB (release): For Play Store deployment
 🌐 Web: Deployed to https://samaan-ai-production-2025.web.app
 
 This release includes both web and Android builds.
-RELEASE_EOF
+EOF
         
     - name: Create GitHub Release
       if: startsWith(github.ref, 'refs/tags/')
