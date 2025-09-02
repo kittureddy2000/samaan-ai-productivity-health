@@ -127,17 +127,17 @@ jobs:
       run: |
         echo "🔐 Setting up Firebase service account..."
         
-        # Check if the secret exists
-        if [ -z "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}" ]; then
-          echo "❌ FATAL: GOOGLE_APPLICATION_CREDENTIALS_JSON secret is missing!"
+        # Check if the production-specific secret exists
+        if [ -z "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_PRODUCTION_JSON }}" ]; then
+          echo "❌ FATAL: GOOGLE_APPLICATION_CREDENTIALS_PRODUCTION_JSON secret is missing!"
           echo "Please add this secret to your GitHub repository settings."
-          echo "It should contain the base64-encoded Firebase service account JSON."
+          echo "It should contain the base64-encoded Firebase PRODUCTION service account JSON."
           exit 1
         fi
         
         # Decode and save the service account key
-        echo "📝 Decoding service account credentials..."
-        echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}" | base64 -d > $HOME/gcloud-service-key.json
+        echo "📝 Decoding production service account credentials..."
+        echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_PRODUCTION_JSON }}" | base64 -d > $HOME/gcloud-service-key.json
         
         # Verify the decoded file is valid JSON
         if ! python3 -m json.tool $HOME/gcloud-service-key.json > /dev/null 2>&1; then
