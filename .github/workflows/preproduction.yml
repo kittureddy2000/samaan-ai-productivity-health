@@ -138,7 +138,7 @@ jobs:
         # Verify the decoded file is valid JSON
         if ! python3 -m json.tool $HOME/gcloud-service-key.json > /dev/null 2>&1; then
           echo "❌ FATAL: Decoded service account key is not valid JSON!"
-          echo "Please check that GOOGLE_APPLICATION_CREDENTIALS_JSON secret contains valid base64-encoded JSON."
+          echo "Please check that GOOGLE_APPLICATION_CREDENTIALS_STAGING_JSON secret contains valid base64-encoded JSON."
           exit 1
         fi
         
