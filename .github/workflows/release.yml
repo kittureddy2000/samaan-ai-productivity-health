@@ -116,7 +116,10 @@ jobs:
         sed -i "s/apiKey: '.*'/apiKey: '${{ secrets.FIREBASE_API_KEY_PRODUCTION }}'/g" lib/firebase_options.dart
         sed -i "s/appId: '1:[0-9]*:web:[a-zA-Z0-9]*'/appId: '${{ secrets.FIREBASE_APP_ID_WEB_PRODUCTION }}'/g" lib/firebase_options.dart
         sed -i "s/appId: 'YOUR_ANDROID_APP_ID_HERE'/appId: '${{ secrets.FIREBASE_APP_ID_ANDROID_PRODUCTION }}'/g" lib/firebase_options.dart
-        echo "✅ Replaced placeholders in firebase_options.dart with production secrets"
+        sed -i "s/projectId: 'samaan-ai-staging-2025'/projectId: 'samaan-ai-production-2025'/g" lib/firebase_options.dart
+        sed -i "s/storageBucket: 'samaan-ai-staging-2025.firebasestorage.app'/storageBucket: 'samaan-ai-production-2025.firebasestorage.app'/g" lib/firebase_options.dart
+        sed -i "s/authDomain: 'samaan-ai-staging-2025.firebaseapp.com'/authDomain: 'samaan-ai-production-2025.firebaseapp.com'/g" lib/firebase_options.dart
+        echo "✅ Replaced Firebase project configuration in firebase_options.dart with production values"
         
     - name: Replace Firebase configuration in web template
       run: |
