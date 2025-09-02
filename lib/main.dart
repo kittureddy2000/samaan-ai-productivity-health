@@ -21,7 +21,7 @@ Future<void> main() async {
 
   try {
     debugPrint('🚀 Starting Firebase initialization...');
-    
+
     // Check if Firebase is already initialized to prevent duplicate app error
     if (Firebase.apps.isEmpty) {
       await Firebase.initializeApp(
