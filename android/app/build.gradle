@@ -18,14 +18,14 @@ if (flutterRoot == null) {
     throw new GradleException("Flutter SDK not found. Define location with flutter.sdk in the local.properties file.")
 }
 
-def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
-if (flutterVersionCode == null) {
-    flutterVersionCode = '1'
+def flutterVersionName = System.env.FLUTTER_BUILD_NAME
+if (flutterVersionName == null) {
+    flutterVersionName = '1.0.0'
 }
 
-def flutterVersionName = localProperties.getProperty('flutter.versionName')
-if (flutterVersionName == null) {
-    flutterVersionName = '1.0'
+def flutterVersionCode = System.env.FLUTTER_BUILD_NUMBER
+if (flutterVersionCode == null) {
+    flutterVersionCode = '1'
 }
 
 def keystoreProperties = new Properties()
