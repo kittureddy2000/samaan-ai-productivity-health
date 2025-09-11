@@ -188,9 +188,15 @@ jobs:
       
     - name: Build Production APK (release)
       run: flutter build apk --release --flavor production --dart-define=ENVIRONMENT=production --build-number=${{ steps.version.outputs.build_number }}
+      env:
+        FLUTTER_BUILD_NUMBER: ${{ steps.version.outputs.build_number }}
+        FLUTTER_BUILD_NAME: 1.0.${{ steps.version.outputs.build_number }}
       
     - name: Build Production App Bundle (release)
       run: flutter build appbundle --release --flavor production --dart-define=ENVIRONMENT=production --build-number=${{ steps.version.outputs.build_number }}
+      env:
+        FLUTTER_BUILD_NUMBER: ${{ steps.version.outputs.build_number }}
+        FLUTTER_BUILD_NAME: 1.0.${{ steps.version.outputs.build_number }}
       
     - name: Verify Gradle signing for productionRelease
       run: |
