@@ -177,10 +177,17 @@ jobs:
           echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
           echo "Using build number from tag: $BUILD_NUMBER"
         else
-          echo "build_number=1" >> $GITHUB_OUTPUT
-          echo "No version tag found, using build number: 1"
+          # Use timestamp-based build number to ensure uniqueness
+          TIMESTAMP_BUILD=$(date +%s)
+          echo "build_number=$TIMESTAMP_BUILD" >> $GITHUB_OUTPUT
+          echo "No version tag found, using timestamp-based build number: $TIMESTAMP_BUILD"
         fi
         
+    - name: Clean Gradle cache to ensure fresh version codes
+      run: |
+        cd android
+        ./gradlew clean
+      
     - name: Build Production APK (release)
       run: flutter build apk --release --flavor production --dart-define=ENVIRONMENT=production --build-number=${{ steps.version.outputs.build_number }}
       
